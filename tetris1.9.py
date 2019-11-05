@@ -343,8 +343,21 @@ def runGame():
                     movingDown = False
 
             if event.type == KEYDOWN:
+                # hold a peice
+                if (event.key == K_e or event.key == K_c) and canHolded:
+                    lastMoveSidewaysTime = time.time() + DELAYAUTOSHIFT
+                    copyPiece = holdPiece
+                    holdPiece = fallingPiece
+                    fallingPiece = copyPiece
+                    holdPiece['x'] = int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2) 
+                    holdPiece['rotation'] = 0
+                    canHolded = False
+                    if fallingPiece != None:
+                        fallingPiece['y'] = 19
+                        if not isValidPosition(board, fallingPiece):
+                            fallingPiece['y'] = 18
                 # moving the piece sideways
-                if (event.key == K_LEFT or event.key == K_a):
+                elif (event.key == K_LEFT or event.key == K_a):
                     movingRight = False
                     movingLeft = True
                     if isValidPosition(board, fallingPiece, adjX=-1):
@@ -363,37 +376,22 @@ def runGame():
                         if not isValidPosition(board, fallingPiece, adjY=1):
                             lastFallTime = time.time() + DELAYLOCKIN - fallFreq
                     
-
-                # hold a peice
-                elif (event.key == K_e or event.key == K_c) and canHolded:
-                    lastMoveSidewaysTime = time.time() + DELAYAUTOSHIFT
-                    copyPiece = holdPiece
-                    holdPiece = fallingPiece
-                    fallingPiece = copyPiece
-                    holdPiece['x'] = int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2) 
-                    holdPiece['rotation'] = 0
-                    canHolded = False
-                    if fallingPiece != None:
-                        fallingPiece['y'] = 19
-                        if not isValidPosition(board, fallingPiece):
-                            fallingPiece['y'] = 18
-                    
                     
 
                 # rotating the piece (if there is room to rotate)
-                elif (event.key == K_UP or event.key == K_x):
+                elif (event.key == K_UP or event.key == K_x) and fallingPiece != None:
                     if not isValidPosition(board, fallingPiece, adjY=1):
                         lastFallTime = time.time() + DELAYLOCKIN - fallFreq
                     spinDirection = 'CW'
                     fallingPiece['rotation'] = (fallingPiece['rotation'] + 1) % len(PIECES[fallingPiece['shape']])
                     superRotationSystem(board, fallingPiece, spinDirection)
-                elif (event.key == K_w or event.key == K_z): # rotate the other direction
+                elif (event.key == K_w or event.key == K_z) and fallingPiece != None: # rotate the other direction
                     if not isValidPosition(board, fallingPiece, adjY=1):
                         lastFallTime = time.time() + DELAYLOCKIN - fallFreq
                     spinDirection = 'CCW'
                     fallingPiece['rotation'] = (fallingPiece['rotation'] - 1) % len(PIECES[fallingPiece['shape']])
                     superRotationSystem(board, fallingPiece, spinDirection)
-                elif (event.key == K_q): # rotate the other direction
+                elif (event.key == K_q) and fallingPiece != None: # rotate the other direction
                     if not isValidPosition(board, fallingPiece, adjY=1):
                         lastFallTime = time.time() + DELAYLOCKIN - fallFreq
                     fallingPiece['rotation'] = (fallingPiece['rotation'] + 2) % len(PIECES[fallingPiece['shape']])
@@ -401,7 +399,7 @@ def runGame():
                         fallingPiece['rotation'] = (fallingPiece['rotation'] - 2) % len(PIECES[fallingPiece['shape']])
 
                 # making the piece fall faster with the down key
-                elif (event.key == K_DOWN or event.key == K_s):
+                elif (event.key == K_DOWN or event.key == K_s) and fallingPiece != None:
                     movingDown = True
                     if isValidPosition(board, fallingPiece, adjY=2):
                         fallingPiece['y'] += 2
@@ -410,7 +408,7 @@ def runGame():
                     lastMoveDownTime = time.time()
 
                 # move the current piece all the way down
-                elif event.key == K_SPACE:
+                elif event.key == K_SPACE and fallingPiece != None:
                     while isValidPosition(board, fallingPiece, adjY=1):
                         fallingPiece['y'] += 1
                     addToBoard(board, fallingPiece)
@@ -450,14 +448,14 @@ def runGame():
                     
                 
         # handle moving the piece because of user input
-        if (movingLeft or movingRight) and time.time() - lastMoveSidewaysTime > AUTOREPEATRATE:
+        if (movingLeft or movingRight) and time.time() - lastMoveSidewaysTime > AUTOREPEATRATE and fallingPiece != None:
             if movingLeft and isValidPosition(board, fallingPiece, adjX=-1):
                 fallingPiece['x'] -= 1
             elif movingRight and isValidPosition(board, fallingPiece, adjX=1):
                 fallingPiece['x'] += 1
             lastMoveSidewaysTime = time.time()
 
-        if movingDown and time.time() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(board, fallingPiece, adjY=1):
+        if movingDown and time.time() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(board, fallingPiece, adjY=1) and fallingPiece != None:
             fallingPiece['y'] += 1
             lastMoveDownTime = time.time()
             lastFallTime = time.time() + DELAYLOCKIN - fallFreq
@@ -577,6 +575,8 @@ def isOnBoard(x, y):
 
 def isValidPosition(board, piece, adjX=0, adjY=0):
     # Return True if the piece is within the board and not colliding
+    if piece == None:
+        return False
     for x in range(TEMPLATEWIDTH):
         for y in range(TEMPLATEHEIGHT):
             isAboveBoard = y + piece['y'] + adjY < 0

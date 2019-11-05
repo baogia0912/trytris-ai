@@ -48,7 +48,7 @@ S_PINK        = ( 87,  21,  69) # T-piece
 BORDERCOLOR     = GRAY2
 BGCOLOR         = BLACK
 TEXTCOLOR       = WHITE
-COLORS          = (GREEN, RED, BLUE, ORANGE, LIGHTBLUE, YELLOW, PINK, S_GREEN, S_RED, S_BLUE, S_ORANGE, S_LIGHTBLUE, S_YELLOW, S_PINK, GRAY3)
+COLORS          = (GREEN, RED, BLUE, ORANGE, LIGHTBLUE, YELLOW, PINK, S_GREEN, S_RED, S_BLUE, S_ORANGE, S_LIGHTBLUE, S_YELLOW, S_PINK, GRAY3, GRAY4)
 GAMEOVERCOLOR   = GRAY3
 
 TEMPLATEWIDTH   = 4
@@ -198,23 +198,23 @@ PIECES_COLOR = {'S': 0,
                 'S_T': 13,
                 }
 
-set1WallkickData = [(( 0, 0), (-1, 0), (-1, 1), ( 0,-2), (-1,-2)),
-                    (( 0, 0), ( 1, 0), ( 1,-1), ( 0, 2), ( 1, 2)),
-                    (( 0, 0), ( 1, 0), ( 1,-1), ( 0, 2), ( 1, 2)),
-                    (( 0, 0), (-1, 0), (-1, 1), ( 0,-2), (-1,-2)),
-                    (( 0, 0), ( 1, 0), ( 1, 1), ( 0,-2), ( 1,-2)),
-                    (( 0, 0), (-1, 0), (-1,-1), ( 0, 2), (-1, 2)),
-                    (( 0, 0), (-1, 0), (-1,-1), ( 0, 2), (-1, 2)),
-                    (( 0, 0), ( 1, 0), ( 1, 1), ( 0,-2), ( 1,-2))]
+set1WallkickData = [((-1, 0), (-1, 1), ( 0,-2), (-1,-2)),
+                    (( 1, 0), ( 1,-1), ( 0, 2), ( 1, 2)),
+                    (( 1, 0), ( 1,-1), ( 0, 2), ( 1, 2)),
+                    ((-1, 0), (-1, 1), ( 0,-2), (-1,-2)),
+                    (( 1, 0), ( 1, 1), ( 0,-2), ( 1,-2)),
+                    ((-1, 0), (-1,-1), ( 0, 2), (-1, 2)),
+                    ((-1, 0), (-1,-1), ( 0, 2), (-1, 2)),
+                    (( 1, 0), ( 1, 1), ( 0,-2), ( 1,-2))]
 
-set2WallkickData = [(( 0, 0), (-2, 0), ( 1, 0), (-2,-1), ( 1, 2)),
-                    (( 0, 0), ( 2, 0), (-1, 0), ( 2, 1), (-1,-2)),
-                    (( 0, 0), (-1, 0), ( 2, 0), (-1, 2), ( 2,-1)),
-                    (( 0, 0), ( 1, 0), (-2, 0), ( 1,-2), (-2, 1)),
-                    (( 0, 0), ( 2, 0), (-1, 0), ( 2, 1), (-1,-2)),
-                    (( 0, 0), (-2, 0), ( 1, 0), (-2,-1), ( 1, 2)),
-                    (( 0, 0), ( 1, 0), (-2, 0), ( 1,-2), (-2, 1)),
-                    (( 0, 0), (-1, 0), ( 2, 0), (-1, 2), ( 2,-1))]
+set2WallkickData = [((-2, 0), ( 1, 0), (-2,-1), ( 1, 2)),
+                    (( 2, 0), (-1, 0), ( 2, 1), (-1,-2)),
+                    ((-1, 0), ( 2, 0), (-1, 2), ( 2,-1)),
+                    (( 1, 0), (-2, 0), ( 1,-2), (-2, 1)),
+                    (( 2, 0), (-1, 0), ( 2, 1), (-1,-2)),
+                    ((-2, 0), ( 1, 0), (-2,-1), ( 1, 2)),
+                    (( 1, 0), (-2, 0), ( 1,-2), (-2, 1)),
+                    ((-1, 0), ( 2, 0), (-1, 2), ( 2,-1))]
 
 def main():
     global FPSCLOCK, DISPLAYSURF, SMALLFONT, BASICFONT, BIGFONT
@@ -252,7 +252,7 @@ def runGame():
     P1ComboCounter = 0
     P2ComboCounter = 0
     spinDirectionP1 = ''
-
+    spinDirectionP2 = ''
     lastMoveDownTimeP2 = time.time()
     lastMoveSidewaysTimeP2 = time.time()
     lastFallTimeP2 = time.time()
@@ -261,7 +261,9 @@ def runGame():
     movingLeftP2 = False
     movingRightP2 = False
     canHoldedP2 = True
-    spinDirectionP2 = ''
+
+    garbageQueueForP1 = []
+    garbageQueueForP2 = []
 
     lineSentToP1 = 0
     lineSentToP2 = 0
@@ -428,7 +430,7 @@ def runGame():
 
             if event.type == KEYDOWN:
                 # moving the piece sideways
-                if (event.key == K_LEFT):
+                if (event.key == K_LEFT) and fallingPieceP1 != None:
                     movingRightP1 = False
                     movingLeftP1 = True
                     if isValidPosition(boardP1, fallingPieceP1, adjX=-1):
@@ -437,7 +439,7 @@ def runGame():
                         if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                             lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
 
-                elif (event.key == K_RIGHT):
+                elif (event.key == K_RIGHT) and fallingPieceP1 != None:
                     movingLeftP1 = False
                     movingRightP1 = True
                     if isValidPosition(boardP1, fallingPieceP1, adjX=1):
@@ -446,7 +448,7 @@ def runGame():
                         if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                             lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
                     
-                elif (event.key == K_j):
+                elif (event.key == K_j) and fallingPieceP2 != None:
                     movingRightP2 = False
                     movingLeftP2 = True
                     if isValidPosition(boardP2, fallingPieceP2, adjX=-1):
@@ -456,7 +458,7 @@ def runGame():
                             lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
 
 
-                elif (event.key == K_l):
+                elif (event.key == K_l) and fallingPieceP2 != None:
                     movingLeftP2 = False
                     movingRightP2 = True
                     if isValidPosition(boardP2, fallingPieceP2, adjX=1):
@@ -466,7 +468,7 @@ def runGame():
                             lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
 
                 # hold a peice
-                elif (event.key == K_e) and canHoldedP1:
+                elif (event.key == K_e) and canHoldedP1 and fallingPieceP1 != None:
                     lastMoveSidewaysTimeP1 = time.time() + DELAYAUTOSHIFT
                     copyPieceP1 = holdPieceP1
                     holdPieceP1 = fallingPieceP1
@@ -479,7 +481,7 @@ def runGame():
                         if not isValidPosition(boardP1, fallingPieceP1):
                             fallingPieceP1['y'] = 18
                     
-                elif (event.key == K_3) and canHoldedP2:
+                elif (event.key == K_3) and canHoldedP2 and fallingPieceP2 != None:
                     lastMoveSidewaysTimeP2 = time.time() + DELAYAUTOSHIFT
                     copyPieceP2 = holdPieceP2
                     holdPieceP2 = fallingPieceP2
@@ -493,58 +495,74 @@ def runGame():
                             fallingPieceP2['y'] = 18
 
                 # rotating the piece (if there is room to rotate)
-                elif (event.key == K_UP):
+                elif (event.key == K_UP) and fallingPieceP1 != None:
+                    P1Tspin = False
                     if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                         lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
                     spinDirectionP1 = 'CW'
                     fallingPieceP1['rotation'] = (fallingPieceP1['rotation'] + 1) % len(PIECES[fallingPieceP1['shape']])
-                    if isValidPosition(boardP1, fallingPieceP1) and fallingPieceP1['shape'] == 'T' and isValidPosition(boardP1, fallingPieceP1, adjY=-1):
-                        P1Tspin = False
+                    if fallingPieceP1['shape'] == 'T':
+                        if isValidPosition(boardP1, fallingPieceP1) and not isValidPosition(boardP1, fallingPieceP1, adjY=-1) and is3ConnerRule(boardP1, fallingPieceP1):
+                            P1Tspin = True
+                        elif not isValidPosition(boardP1, fallingPieceP1):
+                            superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
+                            if is3ConnerRule(boardP1, fallingPieceP1):
+                                P1Tspin = True
                     else:
-                        P1Tspin = superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
-                        if isValidPosition(boardP1, fallingPieceP1, adjY=-2):
-                            P1Tspin = False
-                elif (event.key == K_w): # rotate the other direction
+                        superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
+                elif (event.key == K_w) and fallingPieceP1 != None: # rotate the other direction
+                    P1Tspin = False
                     if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                         lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
                     spinDirectionP1 = 'CCW'
                     fallingPieceP1['rotation'] = (fallingPieceP1['rotation'] - 1) % len(PIECES[fallingPieceP1['shape']])
-                    if isValidPosition(boardP1, fallingPieceP1) and fallingPieceP1['shape'] == 'T' and isValidPosition(boardP1, fallingPieceP1, adjY=-1):
-                        P1Tspin = False
+                    if fallingPieceP1['shape'] == 'T':
+                        if isValidPosition(boardP1, fallingPieceP1) and not isValidPosition(boardP1, fallingPieceP1, adjY=-1) and is3ConnerRule(boardP1, fallingPieceP1):
+                            P1Tspin = True
+                        elif not isValidPosition(boardP1, fallingPieceP1):
+                            superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
+                            if is3ConnerRule(boardP1, fallingPieceP1):
+                                P1Tspin = True
                     else:
-                        P1Tspin = superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
-                        if isValidPosition(boardP1, fallingPieceP1, adjY=-2):
-                            P1Tspin = False
-                elif (event.key == K_q): # rotate the other direction
+                        superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
+                elif (event.key == K_q) and fallingPieceP1 != None: # rotate the other direction
                     if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                         lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
                     fallingPieceP1['rotation'] = (fallingPieceP1['rotation'] + 2) % len(PIECES[fallingPieceP1['shape']])
                     if not isValidPosition(boardP1, fallingPieceP1):
                         fallingPieceP1['rotation'] = (fallingPieceP1['rotation'] - 2) % len(PIECES[fallingPieceP1['shape']])
 
-                elif (event.key == K_i):
+                elif (event.key == K_i) and fallingPieceP2 != None:
+                    P2Tspin = False
                     if not isValidPosition(boardP2, fallingPieceP2, adjY=1):
                         lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
                     spinDirectionP2 = 'CW'
                     fallingPieceP2['rotation'] = (fallingPieceP2['rotation'] + 1) % len(PIECES[fallingPieceP2['shape']])
-                    if isValidPosition(boardP2, fallingPieceP2) and fallingPieceP2['shape'] == 'T' and isValidPosition(boardP2, fallingPieceP2, adjY=-1):
-                        P2Tspin = False
+                    if fallingPieceP2['shape'] == 'T':
+                        if isValidPosition(boardP2, fallingPieceP2) and not isValidPosition(boardP2, fallingPieceP2, adjY=-1) and is3ConnerRule(boardP2, fallingPieceP2):
+                            P2Tspin = True
+                        elif not isValidPosition(boardP2, fallingPieceP2):
+                            superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
+                            if is3ConnerRule(boardP2, fallingPieceP2):
+                                P2Tspin = True
                     else:
-                        P2Tspin = superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
-                        if isValidPosition(boardP2, fallingPieceP2, adjY=-2):
-                            P2Tspin = False
-                elif (event.key == K_2): # rotate the other direction
+                        superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
+                elif (event.key == K_2) and fallingPieceP2 != None: # rotate the other direction
+                    P2Tspin = False
                     if not isValidPosition(boardP2, fallingPieceP2, adjY=1):
                         lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
                     spinDirectionP2 = 'CCW'
                     fallingPieceP2['rotation'] = (fallingPieceP2['rotation'] - 1) % len(PIECES[fallingPieceP2['shape']])
-                    if isValidPosition(boardP2, fallingPieceP2) and fallingPieceP2['shape'] == 'T' and isValidPosition(boardP2, fallingPieceP2, adjY=-1):
-                        P2Tspin = False
+                    if fallingPieceP2['shape'] == 'T':
+                        if isValidPosition(boardP2, fallingPieceP2) and not isValidPosition(boardP2, fallingPieceP2, adjY=-1) and is3ConnerRule(boardP2, fallingPieceP2):
+                            P2Tspin = True
+                        elif not isValidPosition(boardP2, fallingPieceP2):
+                            superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
+                            if is3ConnerRule(boardP2, fallingPieceP2):
+                                P2Tspin = True
                     else:
-                        P2Tspin = superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
-                        if isValidPosition(boardP2, fallingPieceP2, adjY=-2):
-                            P2Tspin = False
-                elif (event.key == K_1): # rotate the other direction
+                        superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
+                elif (event.key == K_1) and fallingPieceP2 != None: # rotate the other direction
                     if not isValidPosition(boardP2, fallingPieceP2, adjY=1):
                         lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
                     fallingPieceP2['rotation'] = (fallingPieceP2['rotation'] + 2) % len(PIECES[fallingPieceP2['shape']])
@@ -553,7 +571,7 @@ def runGame():
 
 
                 # making the piece fall faster with the down key
-                elif (event.key == K_DOWN):
+                elif (event.key == K_DOWN) and fallingPieceP1 != None:
                     movingDownP1 = True
                     if isValidPosition(boardP1, fallingPieceP1, adjY=2):
                         fallingPieceP1['y'] += 2
@@ -561,7 +579,7 @@ def runGame():
                         fallingPieceP1['y'] += 1
                     lastMoveDownTimeP1 = time.time()
 
-                elif (event.key == K_k):
+                elif (event.key == K_k) and fallingPieceP2 != None:
                     movingDownP2 = True
                     if isValidPosition(boardP2, fallingPieceP2, adjY=2):
                         fallingPieceP2['y'] += 2
@@ -570,11 +588,26 @@ def runGame():
                     lastMoveDownTimeP2 = time.time()
 
                 # move the current piece all the way down
-                elif event.key == K_SPACE:
+                elif event.key == K_SPACE and fallingPieceP1 != None:
                     while isValidPosition(boardP1, fallingPieceP1, adjY=1):
                         fallingPieceP1['y'] += 1
                     addToBoard(boardP1, fallingPieceP1)
-                    lineSentToP2 = sendLineFromP1(boardP1, removeCompleteLines(boardP1), lineSentToP2, P1Tspin, P1backToBack, P1ComboCounter)
+                    lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter)
+                    if P1LineRemoved == 0:
+                        for line in garbageQueueForP1:
+                            reciveGarbage(boardP1, line)
+                        garbageQueueForP1 = []
+                    else:
+                        while lineSentToP2 > 0 and garbageQueueForP1 != []:
+                            for line in garbageQueueForP1:
+                                if lineSentToP2 >= line:
+                                    lineSentToP2 -= line
+                                    garbageQueueForP1.pop(0)
+                                elif lineSentToP2 < line:
+                                    garbageQueueForP1[0] -= lineSentToP2
+                                    lineSentToP2 = 0
+                        if lineSentToP2 > 0:
+                            garbageQueueForP2.append(lineSentToP2)
                     P1Tspin = False
                     canHoldedP1 = True
                     fallingPieceP1 = nextPiece1P1
@@ -601,11 +634,26 @@ def runGame():
                             drawHiddenBoardP1()
                             return # can't fit a new piece on the board, so game over
 
-                elif event.key == K_v:
+                elif event.key == K_v and fallingPieceP2 != None:
                     while isValidPosition(boardP2, fallingPieceP2, adjY=1):
                         fallingPieceP2['y'] += 1
                     addToBoard(boardP2, fallingPieceP2)
-                    lineSentToP1 = sendLineFromP2(boardP2, removeCompleteLines(boardP2), lineSentToP1, P2Tspin, P2backToBack, P2ComboCounter)
+                    lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter)
+                    if P2LineRemoved == 0:
+                        for line in garbageQueueForP2:
+                            reciveGarbage(boardP2, line)
+                        garbageQueueForP2 = []
+                    else:
+                        while lineSentToP1 > 0 and garbageQueueForP2 != []:
+                            for line in garbageQueueForP2:
+                                if lineSentToP1 >= line:
+                                    lineSentToP1 -= line
+                                    garbageQueueForP2.pop(0)
+                                elif lineSentToP1 < line:
+                                    garbageQueueForP2[0] -= lineSentToP1
+                                    lineSentToP1 = 0
+                        if lineSentToP1 > 0:
+                            garbageQueueForP1.append(lineSentToP1)
                     P2Tspin = False
                     canHoldedP2 = True
                     fallingPieceP2 = nextPiece1P2
@@ -633,26 +681,26 @@ def runGame():
                             return # can't fit a new piece on the board, so game over    
                 
         # handle moving the piece because of user input
-        if (movingLeftP1 or movingRightP1) and time.time() - lastMoveSidewaysTimeP1 > AUTOREPEATRATE:
+        if (movingLeftP1 or movingRightP1) and time.time() - lastMoveSidewaysTimeP1 > AUTOREPEATRATE and fallingPieceP1 != None:
             if movingLeftP1 and isValidPosition(boardP1, fallingPieceP1, adjX=-1):
                 fallingPieceP1['x'] -= 1
             elif movingRightP1 and isValidPosition(boardP1, fallingPieceP1, adjX=1):
                 fallingPieceP1['x'] += 1
             lastMoveSidewaysTimeP1 = time.time()
         
-        if (movingLeftP2 or movingRightP2) and time.time() - lastMoveSidewaysTimeP2 > AUTOREPEATRATE:
+        if (movingLeftP2 or movingRightP2) and time.time() - lastMoveSidewaysTimeP2 > AUTOREPEATRATE and fallingPieceP2 != None:
             if movingLeftP2 and isValidPosition(boardP2, fallingPieceP2, adjX=-1):
                 fallingPieceP2['x'] -= 1
             elif movingRightP2 and isValidPosition(boardP2, fallingPieceP2, adjX=1):
                 fallingPieceP2['x'] += 1
             lastMoveSidewaysTimeP2 = time.time()
 
-        if movingDownP1 and time.time() - lastMoveDownTimeP1 > MOVEDOWNFREQ and isValidPosition(boardP1, fallingPieceP1, adjY=1):
+        if movingDownP1 and time.time() - lastMoveDownTimeP1 > MOVEDOWNFREQ and isValidPosition(boardP1, fallingPieceP1, adjY=1) and fallingPieceP1 != None:
             fallingPieceP1['y'] += 1
             lastMoveDownTimeP1 = time.time()
             lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
 
-        if movingDownP2 and time.time() - lastMoveDownTimeP2 > MOVEDOWNFREQ and isValidPosition(boardP2, fallingPieceP2, adjY=1):
+        if movingDownP2 and time.time() - lastMoveDownTimeP2 > MOVEDOWNFREQ and isValidPosition(boardP2, fallingPieceP2, adjY=1) and fallingPieceP2 != None:
             fallingPieceP2['y'] += 1
             lastMoveDownTimeP2 = time.time()
             lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
@@ -663,7 +711,22 @@ def runGame():
             if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                 # falling piece has landed, set it on the board
                 addToBoard(boardP1, fallingPieceP1)
-                lineSentToP2 = sendLineFromP1(boardP1, removeCompleteLines(boardP1), lineSentToP2, P1Tspin, P1backToBack, P1ComboCounter)
+                lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter)
+                if P1LineRemoved == 0:
+                    for line in garbageQueueForP1:
+                        reciveGarbage(boardP1, line)
+                    garbageQueueForP1 = []
+                else:
+                    while lineSentToP2 > 0 and garbageQueueForP1 != []:
+                        for line in garbageQueueForP1:
+                            if lineSentToP2 >= line:
+                                lineSentToP2 -= line
+                                garbageQueueForP1.pop(0)
+                            elif lineSentToP2 < line:
+                                garbageQueueForP1[0] -= lineSentToP2
+                                lineSentToP2 = 0
+                    if lineSentToP2 > 0:
+                        garbageQueueForP2.append(lineSentToP2)
                 P1Tspin = False
                 canHoldedP1 = True
                 # No falling piece in play, so start a new piece at the top
@@ -700,7 +763,22 @@ def runGame():
             if not isValidPosition(boardP2, fallingPieceP2, adjY=1):
                 # falling piece has landed, set it on the board
                 addToBoard(boardP2, fallingPieceP2)
-                lineSentToP1 = sendLineFromP2(boardP2, removeCompleteLines(boardP2), lineSentToP1, P2Tspin, P2backToBack, P2ComboCounter)
+                lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter)
+                if P2LineRemoved == 0:
+                    for line in garbageQueueForP2:
+                        reciveGarbage(boardP2, line)
+                    garbageQueueForP2 = []
+                else:
+                    while lineSentToP1 > 0 and garbageQueueForP2 != []:
+                        for line in garbageQueueForP2:
+                            if lineSentToP1 >= line:
+                                lineSentToP1 -= line
+                                garbageQueueForP2.pop(0)
+                            elif lineSentToP1 < line:
+                                garbageQueueForP2[0] -= lineSentToP1
+                                lineSentToP1 = 0
+                    if lineSentToP1 > 0:
+                        garbageQueueForP1.append(lineSentToP1)
                 P2Tspin = False
                 canHoldedP2 = True
                 # No falling piece in play, so start a new piece at the top
@@ -747,8 +825,8 @@ def runGame():
         if fallingPieceP2 != None:
             drawPieceP2(GhostPiece(fallingPieceP2, boardP2))
             drawPieceP2(fallingPieceP2)
-        drawAleartBarP1(lineSentToP1)
-        drawAleartBarP2(lineSentToP2)
+        drawAleartBarP1(sum(garbageQueueForP1))
+        drawAleartBarP2(sum(garbageQueueForP2))
         drawHiddenBoardP1()
         drawHiddenBoardP2()
 
@@ -854,6 +932,8 @@ def isOnBoard(x, y):
 
 def isValidPosition(board, piece, adjX=0, adjY=0):
     # Return True if the piece is within the board and not colliding
+    if piece == None:
+        return False
     for x in range(TEMPLATEWIDTH):
         for y in range(TEMPLATEHEIGHT):
             isAboveBoard = y + piece['y'] + adjY < 0
@@ -864,6 +944,22 @@ def isValidPosition(board, piece, adjX=0, adjY=0):
             if board[x + piece['x'] + adjX][y + piece['y'] + adjY] != BLANK:
                 return False
     return True
+
+
+def is3ConnerRule(board, piece, adjX=0, adjY=0):
+    count = 0 
+    for x in range(TEMPLATEWIDTH):
+        for y in range(TEMPLATEHEIGHT):
+            if ((x==0 and y==0) or (x==0 and y==2) or (x==2 and y==0) or (x==2 and y==2)):
+                if not isOnBoard(x + piece['x'] + adjX, y + piece['y'] + adjY):
+                    count += 1
+                elif board[x + piece['x'] + adjX][y + piece['y'] + adjY] != BLANK:
+                    count += 1
+    if count >= 3:
+        return True
+    else:
+        return False
+    
 
 def superRotationSystem(board, fallingPiece, spinDirection):
     set1 = ['J', 'L', 'S', 'T', 'Z']
@@ -888,9 +984,7 @@ def superRotationSystem(board, fallingPiece, spinDirection):
                         fallingPiece['x'] -= testx 
                         fallingPiece['y'] += testy
                     else:
-                        if fallingPiece['shape'] == 'T':
-                            return True
-                        return 
+                        return
     if fallingPiece['shape'] in set2 and not isValidPosition(board, fallingPiece):
         for index, combination in enumerate(rotationAndDirection):
             if combination:
@@ -907,8 +1001,6 @@ def superRotationSystem(board, fallingPiece, spinDirection):
             fallingPiece['rotation'] = (fallingPiece['rotation'] - 1) % len(PIECES[fallingPiece['shape']])
         elif spinDirection == 'CCW':
             fallingPiece['rotation'] = (fallingPiece['rotation'] + 1) % len(PIECES[fallingPiece['shape']])
-    if fallingPiece['shape'] == 'T':
-        return True
 
 
 def isCompleteLine(board, y):
@@ -941,17 +1033,28 @@ def removeCompleteLines(board):
     return numLinesRemoved
 
 
-def sendLineFromP1(board, numLinesRemoved, lineSent, P1Tspin, P1backToBack, P1ComboCounter):
+def reciveGarbage(board, line):
+    y = 0
+    counter = 0
+    garbageHole = random.randrange(10)
+    while counter < line:
+        for pushUpY in range(y, BOARDHEIGHT - 1):
+            for x in range(BOARDWIDTH):
+                board[x][pushUpY] = board[x][pushUpY + 1]
+        for x in range(BOARDWIDTH):
+            if x == garbageHole:    
+                board[x][BOARDHEIGHT - 1] = BLANK
+            else:
+                board[x][BOARDHEIGHT - 1] = 15
+        counter += 1
+
+
+def sendLineFromP1(board, numLinesRemoved, P1Tspin, P1backToBack, P1ComboCounter):
     blankBoard = getBlankBoard()
     lineSent = 0
 
-    if P1backToBack:
-        print('B2B')
-        lineSent += ATTACKTABLE[10]
-
     if not P1Tspin:
         if numLinesRemoved == 0:
-            P1backToBack = False
             lineSent += ATTACKTABLE[0]
         if numLinesRemoved == 1:
             P1backToBack = False
@@ -963,9 +1066,17 @@ def sendLineFromP1(board, numLinesRemoved, lineSent, P1Tspin, P1backToBack, P1Co
             P1backToBack = False
             lineSent += ATTACKTABLE[3]
         elif numLinesRemoved == 4:
-            P1backToBack = True
+            print('tetris')
+            if P1backToBack:
+                print('B2B')
+                lineSent += ATTACKTABLE[10]
             lineSent += ATTACKTABLE[4]
-    if P1Tspin:
+            P1backToBack = True
+    else:
+        print('T-spin')
+        if P1backToBack:
+            print('B2B')
+            lineSent += ATTACKTABLE[10]
         P1backToBack = True
         if numLinesRemoved == 0:
             lineSent += ATTACKTABLE[8]
@@ -978,28 +1089,25 @@ def sendLineFromP1(board, numLinesRemoved, lineSent, P1Tspin, P1backToBack, P1Co
 
     if blankBoard == board:
         lineSent += ATTACKTABLE[9]
-
-    if numLinesRemoved == 0:
-        P1ComboCounter = 0
-    elif numLinesRemoved > 0:
+        
+    if numLinesRemoved > 0:
         P1ComboCounter += 1
         if P1ComboCounter <= 12:
-            lineSent += COMBOTABLE[P1ComboCounter]
+            lineSent += COMBOTABLE[P1ComboCounter - 1]
         else: 
             lineSent += COMBOTABLE[12]
+    else:
+        P1ComboCounter = 0
     
-    return lineSent
+    return lineSent, P1backToBack, P1ComboCounter, numLinesRemoved
 
 
-def sendLineFromP2(board, numLinesRemoved, lineSent, P2Tspin, P2backToBack, P2ComboCounter):
+def sendLineFromP2(board, numLinesRemoved, P2Tspin, P2backToBack, P2ComboCounter):
     blankBoard = getBlankBoard()
-    
-    if P2backToBack:
-        lineSent += ATTACKTABLE[10]
+    lineSent = 0
 
     if not P2Tspin:
         if numLinesRemoved == 0:
-            P2backToBack = False
             lineSent += ATTACKTABLE[0]
         if numLinesRemoved == 1:
             P2backToBack = False
@@ -1011,9 +1119,17 @@ def sendLineFromP2(board, numLinesRemoved, lineSent, P2Tspin, P2backToBack, P2Co
             P2backToBack = False
             lineSent += ATTACKTABLE[3]
         elif numLinesRemoved == 4:
-            P2backToBack = True
+            print('tetris')
+            if P2backToBack:
+                print('B2B')
+                lineSent += ATTACKTABLE[10]
             lineSent += ATTACKTABLE[4]
-    if P2Tspin:
+            P2backToBack = True
+    else:
+        print('T-spin')
+        if P2backToBack:
+            print('B2B')
+            lineSent += ATTACKTABLE[10]
         P2backToBack = True
         if numLinesRemoved == 0:
             lineSent += ATTACKTABLE[8]
@@ -1027,15 +1143,16 @@ def sendLineFromP2(board, numLinesRemoved, lineSent, P2Tspin, P2backToBack, P2Co
     if blankBoard == board:
         lineSent += ATTACKTABLE[9]
 
-    if numLinesRemoved == 0:
-        P2ComboCounter = 0
-    elif numLinesRemoved > 0:
+    if numLinesRemoved > 0:
         P2ComboCounter += 1
         if P2ComboCounter <= 12:
-            lineSent += COMBOTABLE[P2ComboCounter]
+            lineSent += COMBOTABLE[P2ComboCounter - 1]
         else: 
             lineSent += COMBOTABLE[12]
-    return lineSent
+    else:
+        P2ComboCounter = 0
+
+    return lineSent, P2backToBack, P2ComboCounter, numLinesRemoved
 
 
 def convertToPixelCoordsP1(boxx, boxy):

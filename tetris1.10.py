@@ -16,6 +16,8 @@ DELAYAUTOSHIFT = 0.12
 MOVEDOWNFREQ = 0
 DELAYLOCKIN = 0.5
 
+PUSHUPREQUIRED = 10
+
 XMARGIN = int((WINDOWWIDTH - BOARDWIDTH * BOXSIZE) / 2) 
 TOPMARGIN = WINDOWHEIGHT - (BOARDHEIGHT * BOXSIZE) - 80
 
@@ -46,6 +48,7 @@ BORDERCOLOR     = GRAY2
 BGCOLOR         = BLACK
 TEXTCOLOR       = WHITE
 COLORS          = (GREEN, RED, BLUE, ORANGE, LIGHTBLUE, YELLOW, PINK, S_GREEN, S_RED, S_BLUE, S_ORANGE, S_LIGHTBLUE, S_YELLOW, S_PINK, GRAY3, GRAY4)
+GAMEOVERCOLOR   = GRAY3
 
 TEMPLATEWIDTH   = 4
 TEMPLATEHEIGHT  = 4
@@ -235,17 +238,26 @@ def runGame():
     lastMoveDownTime = time.time()
     lastMoveSidewaysTime = time.time()
     lastFallTime = time.time()
+    lastPushUp = time.time()
+    gameStartTime = time.time()
     lose = False
     movingDown = False # note: there is no movingUp variable
     movingLeft = False
     movingRight = False
     alowShift = False
     canHolded = True
-    fallFreq = 1
+    reduceMovingTime = True
+    piecePlaced = 0
+    fallFreq = 0.8
+    pushUpCounter = 0
+    pushUpFreq = 10
+    freeMovingTime = 20
+    lineRemoved = 0
     bag = list(PIECES.keys())
     spinDirection = ''
 
     fallingPiece = getNewPiece(bag)
+    lastSpawnTime = time.time()
     bag.remove(fallingPiece['shape'])
 
     nextPiece1 = getNewPiece(bag)
@@ -266,6 +278,10 @@ def runGame():
         if fallingPiece == None:
             # No falling piece in play, so start a new piece at the top
             fallingPiece = nextPiece1
+            lastSpawnTime = time.time()
+            freeMovingTime = 20
+            reduceMovingTime = True
+            canHolded = True
             if len(bag) == 0:
                 bag = list(PIECES.keys())
             
@@ -293,7 +309,7 @@ def runGame():
         checkForQuit()
         for event in pygame.event.get(): # event handling loop
             if event.type == KEYUP:
-                if (event.key == K_LSHIFT):
+                if (event.key == K_TAB):
                     #quit the game
                     terminate()
                 elif (event.key == K_f):
@@ -348,6 +364,8 @@ def runGame():
                     copyPiece = holdPiece
                     holdPiece = fallingPiece
                     fallingPiece = copyPiece
+                    lastSpawnTime = time.time()
+                    freeMovingTime = 20
                     holdPiece['x'] = int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2) 
                     holdPiece['rotation'] = 0
                     canHolded = False
@@ -398,7 +416,7 @@ def runGame():
                         fallingPiece['rotation'] = (fallingPiece['rotation'] - 2) % len(PIECES[fallingPiece['shape']])
 
                 # making the piece fall faster with the down key
-                elif (event.key == K_DOWN or event.key == K_s):
+                elif (event.key == K_DOWN or event.key == K_s) and fallingPiece != None:
                     movingDown = True
                     if isValidPosition(board, fallingPiece, adjY=2):
                         fallingPiece['y'] += 2
@@ -411,10 +429,13 @@ def runGame():
                     while isValidPosition(board, fallingPiece, adjY=1):
                         fallingPiece['y'] += 1
                     addToBoard(board, fallingPiece)
-                    removeCompleteLines(board)
-                    reciveGarbage(board)
+                    lineRemoved += removeCompleteLines(board)
                     canHolded = True
+                    reduceMovingTime = True
                     fallingPiece = nextPiece1
+                    lastSpawnTime = time.time()
+                    freeMovingTime = 20
+                    piecePlaced += 1
                     if len(bag) == 0:
                         bag = list(PIECES.keys())
                     
@@ -440,6 +461,8 @@ def runGame():
 
                 if event.key == pygame.K_i:
                     pygame.display.iconify()
+
+
             elif event.type == pygame.ACTIVEEVENT:
                 if event.gain == 1 and event.state == 6:
                     print('maximized')
@@ -448,32 +471,69 @@ def runGame():
                     
                 
         # handle moving the piece because of user input
-        if (movingLeft or movingRight) and time.time() - lastMoveSidewaysTime > AUTOREPEATRATE:
-            if movingLeft and isValidPosition(board, fallingPiece, adjX=-1):
-                fallingPiece['x'] -= 1
-            elif movingRight and isValidPosition(board, fallingPiece, adjX=1):
-                fallingPiece['x'] += 1
+        if (movingLeft or movingRight) and time.time() - lastMoveSidewaysTime > AUTOREPEATRATE and fallingPiece != None:
+            if AUTOREPEATRATE == 0:
+                while movingLeft and isValidPosition(board, fallingPiece, adjX=-1):
+                    fallingPiece['x'] -= 1
+                while movingRight and isValidPosition(board, fallingPiece, adjX=1):
+                    fallingPiece['x'] += 1
+            else:    
+                if movingLeft and isValidPosition(board, fallingPiece, adjX=-1):
+                    fallingPiece['x'] -= 1
+                elif movingRight and isValidPosition(board, fallingPiece, adjX=1):
+                    fallingPiece['x'] += 1
             lastMoveSidewaysTime = time.time()
 
-        if movingDown and time.time() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(board, fallingPiece, adjY=1):
+        if movingDown and time.time() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(board, fallingPiece, adjY=1) and fallingPiece != None:
             fallingPiece['y'] += 1
             lastMoveDownTime = time.time()
             lastFallTime = time.time() + DELAYLOCKIN - fallFreq
 
         # let the piece fall if it is time to fall
-        if time.time() - lastFallTime > fallFreq:
+        if time.time() - lastFallTime > fallFreq or time.time() - lastSpawnTime > freeMovingTime:
+            if time.time() - lastSpawnTime > freeMovingTime:
+                while isValidPosition(board, fallingPiece, adjY=1):
+                    fallingPiece['y'] += 1
+                addToBoard(board, fallingPiece)
+                lineRemoved += removeCompleteLines(board)
+                piecePlaced += 1
+                fallingPiece = None
             # see if the piece has landed
-            if not isValidPosition(board, fallingPiece, adjY=1):
+            elif not isValidPosition(board, fallingPiece, adjY=1):
                 # falling piece has landed, set it on the board
                 addToBoard(board, fallingPiece)
-                removeCompleteLines(board)
-                fallFreq = 1
-                canHolded = True
+                lineRemoved += removeCompleteLines(board)
+                piecePlaced += 1
                 fallingPiece = None
             else:
                 # piece did not land, just move the piece down
                 fallingPiece['y'] += 1
                 lastFallTime = time.time()
+
+        if not isValidPosition(board, fallingPiece, adjY=1) and reduceMovingTime:
+            reduceMovingTime = False
+            lastSpawnTime = time.time()
+            freeMovingTime = 5
+
+        #increase pushUpFreq
+        if pushUpCounter >= PUSHUPREQUIRED:
+            pushUpCounter = 0
+            if pushUpFreq >= 5:
+                pushUpFreq -= 1
+            elif pushUpFreq >= 3:
+                pushUpFreq -= 0.5
+            elif pushUpFreq >= 1:
+                pushUpFreq -= 0.1
+            elif pushUpFreq <= 0.5:
+                return
+
+        #push up lines 
+        if time.time() - lastPushUp > pushUpFreq:
+            lastPushUp = time.time()
+            pushUpCounter += 1
+            reciveGarbage(board)
+            if not isValidPosition(board, fallingPiece, adjY=1):
+                fallingPiece['y'] -= 1
 
         # drawing everything on the screen
         DISPLAYSURF.fill(BGCOLOR)
@@ -485,6 +545,18 @@ def runGame():
             drawPiece(GhostPiece(fallingPiece, board))
             drawPiece(fallingPiece)
         drawHiddenBoard()
+
+        drawText('push every ', 40, 160)
+        drawText(str(pushUpFreq) + ' seconds', 40, 180)
+
+        drawText(str(PUSHUPREQUIRED - pushUpCounter) + ' push up left', 40, 240)
+
+        drawText('Time till push', 40, 280)
+        drawText(str(round(pushUpFreq - (time.time() - lastPushUp), 1)), 40, 300)
+
+        drawText(str('----------------------'), 40, 340)
+
+        drawStats(40, 400, piecePlaced, gameStartTime, lineRemoved)
 
         pygame.display.update()
         FPSCLOCK.tick(FPS)
@@ -762,14 +834,16 @@ def drawHoldPiece(piece):
     if piece != None:
         drawPiece(piece, pixelx=WINDOWWIDTH-540, pixely=120)
 
+
 def drawText(text, x, y):
     infoSurf = BASICFONT.render(text, True, WHITE)
     infoRect = infoSurf.get_rect()
     infoRect.topleft = (x, y)
     DISPLAYSURF.blit(infoSurf, infoRect)
 
+
 def drawInstructions(x, y):
-    drawText('q: Quit', x, y)
+    drawText('tab: Quit', x, y)
     drawText('r: Reset', x, y + 20)
     drawText('p: Pause', x, y + 40)
     drawText('f: Fullscreen', x, y + 60)
@@ -781,6 +855,13 @@ def drawInstructions(x, y):
     drawText('down, s: Soft drop', x, y + 180)
     drawText('up, x: Clockwise', x, y + 200)
     drawText('w, z: Counter clockwise', x, y + 220)
+
+
+def drawStats(x, y, piecePlaced, gameStartTime, lineRemoved):
+    drawText('Time: ' + str(round(time.time() - gameStartTime, 2)), x, y)
+    drawText('Piece/sec: ' + str(round(piecePlaced / (time.time() - gameStartTime), 2)), x, y + 40)
+    drawText('Line/sec: ' + str(round(lineRemoved / (time.time() - gameStartTime), 2)), x, y + 80)
+
 
 if __name__ == '__main__':
     main()

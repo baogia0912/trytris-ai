@@ -13,12 +13,11 @@ MOVESIDEWAYSFREQ = 0.15
 MOVEDOWNFREQ = 0.1
 
 
-XMARGIN = int((WINDOWWIDTH - BOARDWIDTH * BOXSIZE) / 2)
+XMARGIN = int((WINDOWWIDTH - BOARDWIDTH * BOXSIZE) / 2) 
 TOPMARGIN = WINDOWHEIGHT - (BOARDHEIGHT * BOXSIZE) - 5
 
 #               R    G    B
 WHITE       = (255, 255, 255) 
-GRAY        = (153, 153, 153) # ghost piece
 BLACK       = (  0,   0,   0) 
 RED         = (215,  15,  54) # S-piece
 GREEN       = ( 89, 177,   1) # Z-piece
@@ -31,7 +30,6 @@ PINK        = (175,  40, 138) # T-piece
 BORDERCOLOR = WHITE
 BGCOLOR = BLACK
 TEXTCOLOR = WHITE
-TEXTSHADOWCOLOR = GRAY
 COLORS      = (GREEN, RED, BLUE, ORANGE, LIGHTBLUE, YELLOW, PINK)
 
 TEMPLATEWIDTH = 5
@@ -218,9 +216,7 @@ def runGame():
             if event.type == KEYUP:
                 if (event.key == K_p):
                     DISPLAYSURF.fill(BGCOLOR)
-                    pygame.mixer.music.stop()
                     showTextScreen('Paused') # pause until a key press
-                    pygame.mixer.music.play(-1, 0.0)
                     lastFallTime = time.time()
                     lastMoveDownTime = time.time()
                     lastMoveSidewaysTime = time.time()
@@ -391,7 +387,7 @@ def removeCompleteLines(board):
             numLinesRemoved += 1
         else:
             y -= 1 # move on to check next row up
-    return numLinesRemoved
+    return  
 
 def convertToPixelCoords(boxx, boxy):
     return (XMARGIN + (boxx * BOXSIZE)), (TOPMARGIN + (boxy * BOXSIZE))

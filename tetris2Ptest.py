@@ -261,6 +261,24 @@ def runGame():
     movingLeftP2 = False
     movingRightP2 = False
     canHoldedP2 = True
+    P1LineRemoved = 0
+    P2LineRemoved = 0
+    P1PerfectClear = False
+    P2PerfectClear = False
+    P1backToBackPrint = False
+    P2backToBackPrint = False
+    P1Tetris = False
+    P2Tetris = False
+    P1Combo = False
+    P2Combo = False
+    P1TMini = False
+    P2TMini = False
+    P1TSingle = False
+    P2TSingle = False
+    P1TDouble = False
+    P2TDouble = False
+    P1TTriple = False
+    P2TTriple = False
 
     garbageQueueForP1 = []
     garbageQueueForP2 = []
@@ -389,9 +407,11 @@ def runGame():
                 elif (event.key == K_r):
                     #reset the game
                     return
+                elif (event.key == K_t):
+                    mixUpBottom(boardP1, 3)
                 elif (event.key == K_h):
                     DISPLAYSURF.fill(BGCOLOR)
-                    drawInstructions(WINDOWWIDTH/2 - 100, 200)
+                    drawInstructions(WINDOWWIDTH/2 - 100, 200, WHITE)
                     titleSurf, titleRect = makeTextObjs('Instructions', BIGFONT, TEXTCOLOR)
                     titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) - 200)
                     DISPLAYSURF.blit(titleSurf, titleRect)
@@ -592,7 +612,7 @@ def runGame():
                     while isValidPosition(boardP1, fallingPieceP1, adjY=1):
                         fallingPieceP1['y'] += 1
                     addToBoard(boardP1, fallingPieceP1)
-                    lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter)
+                    lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple)
                     if P1LineRemoved == 0:
                         for line in garbageQueueForP1:
                             reciveGarbage(boardP1, line)
@@ -610,6 +630,23 @@ def runGame():
                             garbageQueueForP2.append(lineSentToP2)
                     P1Tspin = False
                     canHoldedP1 = True
+                    if P1PerfectClear:
+                        P1PCTimer = time.time()
+                    if P1backToBackPrint:
+                        P1B2BTimer = time.time()
+                    if P1Tetris:
+                        P1TetrisTimer = time.time()
+                    if P1Combo:
+                        P1ComboTimer = time.time()
+                    if P1TMini:
+                        P1TMiniTimer = time.time()
+                    if P1TSingle:
+                        P1TSingleTimer = time.time()
+                    if P1TDouble:
+                        P1TDoubleTimer = time.time()
+                    if P1TTriple:
+                        P1TTripleTimer = time.time()
+
                     fallingPieceP1 = nextPiece1P1
                     if len(bagP1) == 0:
                         bagP1 = list(PIECES.keys())
@@ -638,7 +675,7 @@ def runGame():
                     while isValidPosition(boardP2, fallingPieceP2, adjY=1):
                         fallingPieceP2['y'] += 1
                     addToBoard(boardP2, fallingPieceP2)
-                    lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter)
+                    lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple)
                     if P2LineRemoved == 0:
                         for line in garbageQueueForP2:
                             reciveGarbage(boardP2, line)
@@ -656,6 +693,23 @@ def runGame():
                             garbageQueueForP1.append(lineSentToP1)
                     P2Tspin = False
                     canHoldedP2 = True
+                    if P2PerfectClear:
+                        P2PCTimer = time.time()
+                    if P2backToBackPrint:
+                        P2B2BTimer = time.time()
+                    if P2Tetris:
+                        P2TetrisTimer = time.time()
+                    if P2Combo:
+                        P2ComboTimer = time.time()
+                    if P2TMini:
+                        P2TMiniTimer = time.time()
+                    if P2TSingle:
+                        P2TSingleTimer = time.time()
+                    if P2TDouble:
+                        P2TDoubleTimer = time.time()
+                    if P2TTriple:
+                        P2TTripleTimer = time.time()
+
                     fallingPieceP2 = nextPiece1P2
                     if len(bagP2) == 0:
                         bagP2 = list(PIECES.keys())
@@ -711,7 +765,7 @@ def runGame():
             if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                 # falling piece has landed, set it on the board
                 addToBoard(boardP1, fallingPieceP1)
-                lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter)
+                lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple)
                 if P1LineRemoved == 0:
                     for line in garbageQueueForP1:
                         reciveGarbage(boardP1, line)
@@ -729,6 +783,23 @@ def runGame():
                         garbageQueueForP2.append(lineSentToP2)
                 P1Tspin = False
                 canHoldedP1 = True
+                if P1PerfectClear:
+                    P1PCTimer = time.time()
+                if P1backToBackPrint:
+                    P1B2BTimer = time.time()
+                if P1Tetris:
+                    P1TetrisTimer = time.time()
+                if P1Combo:
+                    P1ComboTimer = time.time()
+                if P1TMini:
+                    P1TMiniTimer = time.time()
+                if P1TSingle:
+                    P1TSingleTimer = time.time()
+                if P1TDouble:
+                    P1TDoubleTimer = time.time()
+                if P1TTriple:
+                    P1TTripleTimer = time.time()
+            
                 # No falling piece in play, so start a new piece at the top
                 fallingPieceP1 = nextPiece1P1
                 if len(bagP1) == 0:
@@ -763,7 +834,7 @@ def runGame():
             if not isValidPosition(boardP2, fallingPieceP2, adjY=1):
                 # falling piece has landed, set it on the board
                 addToBoard(boardP2, fallingPieceP2)
-                lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter)
+                lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple)
                 if P2LineRemoved == 0:
                     for line in garbageQueueForP2:
                         reciveGarbage(boardP2, line)
@@ -781,6 +852,23 @@ def runGame():
                         garbageQueueForP1.append(lineSentToP1)
                 P2Tspin = False
                 canHoldedP2 = True
+                if P2PerfectClear:
+                    P2PCTimer = time.time()
+                if P2backToBackPrint:
+                    P2B2BTimer = time.time()
+                if P2Tetris:
+                    P2TetrisTimer = time.time()
+                if P2Combo:
+                    P2ComboTimer = time.time()
+                if P2TMini:
+                    P2TMiniTimer = time.time()
+                if P2TSingle:
+                    P2TSingleTimer = time.time()
+                if P2TDouble:
+                    P2TDoubleTimer = time.time()
+                if P2TTriple:
+                    P2TTripleTimer = time.time()
+
                 # No falling piece in play, so start a new piece at the top
                 fallingPieceP2 = nextPiece1P2
                 if len(bagP2) == 0:
@@ -818,7 +906,7 @@ def runGame():
         drawHoldPieceP1(holdPieceP1)
         drawNextPieceP2(NEXT_PIECESP2)
         drawHoldPieceP2(holdPieceP2)
-        drawText('Press h for help', 20, 20)
+        drawText('Press h for help', 20, 20, WHITE)
         if fallingPieceP1 != None:
             drawPieceP1(GhostPiece(fallingPieceP1, boardP1))
             drawPieceP1(fallingPieceP1)
@@ -830,6 +918,73 @@ def runGame():
         drawHiddenBoardP1()
         drawHiddenBoardP2()
 
+        drawSpecialMove(60, 300, P1ComboCounter, P1Tspin, P1backToBackPrint, boardP1, P1Tetris, P1PerfectClear, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple)
+        drawSpecialMove(660, 300, P2ComboCounter, P2Tspin, P2backToBackPrint, boardP2, P2Tetris, P2PerfectClear, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple)
+
+        if P1PerfectClear:
+            if time.time() - P1PCTimer > 1:
+                P1PerfectClear = False
+
+        if P2PerfectClear:
+            if time.time() - P2PCTimer > 1:
+                P2PerfectClear = False
+
+        if P1backToBackPrint:
+            if time.time() - P1B2BTimer > 1:
+                P1backToBackPrint = False
+
+        if P2backToBackPrint:
+            if time.time() - P2B2BTimer > 1:
+                P2backToBackPrint = False
+
+        if P1Tetris:
+            if time.time() - P1TetrisTimer > 1:
+                P1Tetris = False
+
+        if P2Tetris:
+            if time.time() - P2TetrisTimer > 1:
+                P2Tetris = False
+
+        if P1Combo:
+            if time.time() - P1ComboTimer > 1:
+                P1Combo = False
+
+        if P2Combo:
+            if time.time() - P2ComboTimer > 1:
+                P2Combo = False
+
+        if P1TMini:
+            if time.time() - P1TMiniTimer > 1:
+                P1TMini = False
+
+        if P2TMini:
+            if time.time() - P2TMiniTimer > 1:
+                P2TMini = False
+
+        if P1TSingle:
+            if time.time() - P1TSingleTimer > 1:
+                P1TSingle = False
+
+        if P2TSingle:
+            if time.time() - P2TSingleTimer > 1:
+                P2TSingle = False
+
+        if P1TDouble:
+            if time.time() - P1TDoubleTimer > 1:
+                P1TDouble = False
+
+        if P2TDouble:
+            if time.time() - P2TDoubleTimer > 1:
+                P2TDouble = False
+
+        if P1TTriple:
+            if time.time() - P1TTripleTimer > 1:
+                P1TTriple = False
+
+        if P2TTriple:
+            if time.time() - P2TTripleTimer > 1:
+                P2TTriple = False
+                
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
@@ -914,7 +1069,7 @@ def addToBoard(board, piece):
     # fill in the board based on piece's location, shape, and rotation
     for x in range(TEMPLATEWIDTH):
         for y in range(TEMPLATEHEIGHT):
-            if PIECES[piece['shape']][piece['rotation']][y][x] != BLANK:
+            if piece!=None and PIECES[piece['shape']][piece['rotation']][y][x] != BLANK:
                 board[x + piece['x']][y + piece['y']] = piece['color']
 
 
@@ -1011,6 +1166,13 @@ def isCompleteLine(board, y):
     return True
 
 
+def isBlankLine(board, y):
+    for x in range(BOARDWIDTH):
+        if board[x][y] != BLANK:
+            return False
+    return True
+
+
 def removeCompleteLines(board):
     # Remove any completed lines on the board, move everything above them down, and return the number of complete lines.
     numLinesRemoved = 0
@@ -1049,7 +1211,95 @@ def reciveGarbage(board, line):
         counter += 1
 
 
-def sendLineFromP1(board, numLinesRemoved, P1Tspin, P1backToBack, P1ComboCounter):
+def GarbageTransferFrom(board, line):
+
+    #take out the amount of line from the first board
+    lineToSend = []
+    y = BOARDHEIGHT - 1
+
+
+    for x in range(BOARDWIDTH):
+        lineToSend.append(board[x][-1:(-1*line) - 1:-1])
+
+    while y >= BOARDHEIGHT - line:
+
+        for pullDownY in range(BOARDHEIGHT - 1, 0, -1):
+            for x in range(BOARDWIDTH):
+                board[x][pullDownY] = board[x][pullDownY - 1]
+        
+        for x in range(BOARDWIDTH):
+            board[x][0] = BLANK
+        y -= 1
+    return lineToSend
+
+
+def GarbageTransferTo(board, line):
+    #add to the second board
+    y = 0
+    counter = 0
+    len(line[0])
+    while counter < len(line[0]):
+        for pushUpY in range(y, BOARDHEIGHT - 1):
+            for x in range(BOARDWIDTH):
+                board[x][pushUpY] = board[x][pushUpY + 1]
+        for x in range(BOARDWIDTH):
+            board[x][BOARDHEIGHT - 1] = line[x][-1-counter]
+        counter += 1
+
+
+def burnGarbage(board, line):
+
+    y = BOARDHEIGHT - 1 
+    while y >= BOARDHEIGHT - line:
+
+        for pullDownY in range(BOARDHEIGHT - 1, 0, -1):
+            for x in range(BOARDWIDTH):
+                board[x][pullDownY] = board[x][pullDownY - 1]
+        
+        for x in range(BOARDWIDTH):
+            board[x][0] = BLANK
+        y -= 1
+
+
+def mixUpTop(board, line):
+    y = 0
+    counter = 0
+    while counter < line and y < BOARDHEIGHT:
+        if isBlankLine(board, y):
+            y += 1
+            continue
+        #mix
+        copyRow = []
+        for x in range(BOARDWIDTH):
+            copyRow.append(board[x][y])
+
+        random.shuffle(copyRow)
+
+        for x in range(BOARDWIDTH):
+            board[x][y] = copyRow[x]
+
+        y += 1
+        counter += 1
+
+
+def mixUpBottom(board, line):
+    y = BOARDHEIGHT - 1
+    counter = 0
+    while counter < line:
+        copyRow = []
+        for x in range(BOARDWIDTH):
+            copyRow.append(board[x][y])
+
+        random.shuffle(copyRow)
+
+        for x in range(BOARDWIDTH):
+            board[x][y] = copyRow[x]
+            
+        y -= 1
+        counter += 1
+
+
+def sendLineFromP1(board, numLinesRemoved, P1Tspin, P1backToBack, P1ComboCounter, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple):
     blankBoard = getBlankBoard()
     lineSent = 0
 
@@ -1066,31 +1316,36 @@ def sendLineFromP1(board, numLinesRemoved, P1Tspin, P1backToBack, P1ComboCounter
             P1backToBack = False
             lineSent += ATTACKTABLE[3]
         elif numLinesRemoved == 4:
-            print('tetris')
+            P1Tetris = True
             if P1backToBack:
-                print('B2B')
+                P1backToBackPrint = True
                 lineSent += ATTACKTABLE[10]
             lineSent += ATTACKTABLE[4]
             P1backToBack = True
     else:
-        print('T-spin')
         if P1backToBack:
-            print('B2B')
+            P1backToBackPrint = True
             lineSent += ATTACKTABLE[10]
         P1backToBack = True
         if numLinesRemoved == 0:
+            P1TMini = True
             lineSent += ATTACKTABLE[8]
         elif numLinesRemoved == 1:
+            P1TSingle = True
             lineSent += ATTACKTABLE[7]
         elif numLinesRemoved == 2:
+            P1TDouble = True
             lineSent += ATTACKTABLE[5]
         elif numLinesRemoved == 3:
+            P1TTriple = True
             lineSent += ATTACKTABLE[6]
 
     if blankBoard == board:
+        P1PerfectClear = True
         lineSent += ATTACKTABLE[9]
         
     if numLinesRemoved > 0:
+        P1Combo = True
         P1ComboCounter += 1
         if P1ComboCounter <= 12:
             lineSent += COMBOTABLE[P1ComboCounter - 1]
@@ -1099,10 +1354,10 @@ def sendLineFromP1(board, numLinesRemoved, P1Tspin, P1backToBack, P1ComboCounter
     else:
         P1ComboCounter = 0
     
-    return lineSent, P1backToBack, P1ComboCounter, numLinesRemoved
+    return lineSent, P1backToBack, P1ComboCounter, numLinesRemoved, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple
 
 
-def sendLineFromP2(board, numLinesRemoved, P2Tspin, P2backToBack, P2ComboCounter):
+def sendLineFromP2(board, numLinesRemoved, P2Tspin, P2backToBack, P2ComboCounter, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple):
     blankBoard = getBlankBoard()
     lineSent = 0
 
@@ -1119,31 +1374,36 @@ def sendLineFromP2(board, numLinesRemoved, P2Tspin, P2backToBack, P2ComboCounter
             P2backToBack = False
             lineSent += ATTACKTABLE[3]
         elif numLinesRemoved == 4:
-            print('tetris')
+            P2Tetris = True
             if P2backToBack:
-                print('B2B')
+                P2backToBackPrint = True
                 lineSent += ATTACKTABLE[10]
             lineSent += ATTACKTABLE[4]
             P2backToBack = True
     else:
-        print('T-spin')
         if P2backToBack:
-            print('B2B')
+            P2backToBackPrint = True
             lineSent += ATTACKTABLE[10]
         P2backToBack = True
         if numLinesRemoved == 0:
+            P2TMini = True
             lineSent += ATTACKTABLE[8]
         elif numLinesRemoved == 1:
+            P2TSingle = True
             lineSent += ATTACKTABLE[7]
         elif numLinesRemoved == 2:
+            P2TDouble = True
             lineSent += ATTACKTABLE[5]
         elif numLinesRemoved == 3:
+            P2TTriple = True
             lineSent += ATTACKTABLE[6]
 
     if blankBoard == board:
+        P2PerfectClear = True
         lineSent += ATTACKTABLE[9]
 
     if numLinesRemoved > 0:
+        P2Combo = True
         P2ComboCounter += 1
         if P2ComboCounter <= 12:
             lineSent += COMBOTABLE[P2ComboCounter - 1]
@@ -1152,7 +1412,7 @@ def sendLineFromP2(board, numLinesRemoved, P2Tspin, P2backToBack, P2ComboCounter
     else:
         P2ComboCounter = 0
 
-    return lineSent, P2backToBack, P2ComboCounter, numLinesRemoved
+    return lineSent, P2backToBack, P2ComboCounter, numLinesRemoved, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple
 
 
 def convertToPixelCoordsP1(boxx, boxy):
@@ -1336,26 +1596,61 @@ def drawHoldPieceP2(piece):
         drawPieceP2(piece, pixelx=WINDOWWIDTH-540, pixely=120)
 
 
-def drawText(text, x, y):
-    infoSurf = BASICFONT.render(text, True, WHITE)
+def drawText(text, x, y, color):
+    infoSurf = BASICFONT.render(text, True, color)
     infoRect = infoSurf.get_rect()
     infoRect.topleft = (x, y)
     DISPLAYSURF.blit(infoSurf, infoRect)
 
-def drawInstructions(x, y):
-    drawText('tab: Quit', x, y)
-    drawText('r: Reset', x, y + 20)
-    drawText('p: Pause', x, y + 40)
-    drawText('f: Fullscreen', x, y + 60)
-    drawText('g: Small screen', x, y + 80)
-    drawText('P1-e | P2-3: Hold', x, y + 100)
-    drawText('P1-space | P2-v: Hard drop', x, y + 120)
-    drawText('P1-left | P2-j: Move left', x, y + 140)
-    drawText('P1-right | P2-l: Move right', x, y + 160)
-    drawText('P1-down | P2-k: Soft drop', x, y + 180)
-    drawText('P1-up | P2-i: Clockwise', x, y + 200)
-    drawText('P1-w | P2-2: Counter clockwise', x, y + 220)
-    drawText('P1-q | P2-1: Rotate 180', x, y + 240)
+
+def drawInstructions(x, y, color):
+    drawText('tab: Quit', x, y, color)
+    drawText('r: Reset', x, y + 20, color)
+    drawText('p: Pause', x, y + 40, color)
+    drawText('f: Fullscreen', x, y + 60, color)
+    drawText('g: Small screen', x, y + 80, color)
+    drawText('P1-e | P2-3: Hold', x, y + 100, color)
+    drawText('P1-space | P2-v: Hard drop', x, y + 120, color)
+    drawText('P1-left | P2-j: Move left', x, y + 140, color)
+    drawText('P1-right | P2-l: Move right', x, y + 160, color)
+    drawText('P1-down | P2-k: Soft drop', x, y + 180, color)
+    drawText('P1-up | P2-i: Clockwise', x, y + 200, color)
+    drawText('P1-w | P2-2: Counter clockwise', x, y + 220, color)
+    drawText('P1-q | P2-1: Rotate 180', x, y + 240, color)
+
+
+def drawSpecialMove(x, y, ComboCounter, Tspin, backToBack, board, tetris, PC, combo, mini, single, double, triple):
+    if ComboCounter != 0:
+        ComboCounter -= 1
+     
+    if PC:
+        drawText('Perfect Clear', x, y, WHITE)
+    if combo:
+        drawText(str(ComboCounter) + ' Combo', x, y + 40, WHITE)
+    if mini:
+        drawText('T-Spin Mini', x, y + 80, WHITE)
+    if single:
+        drawText('T-Spin Single', x, y + 80, WHITE)
+    if double:
+        drawText('T-Spin Dounble', x, y + 80, WHITE)
+    if triple:
+        drawText('T-Spin Triple', x, y + 80, WHITE)
+    if backToBack:
+        drawText('BackToBack', x, y + 120, WHITE)
+    if tetris:
+        drawText('Tetris', x, y + 160, WHITE)
+
+
+def fade(width, height, x, y): 
+    fade = pygame.Surface((width, height))
+    fade.fill((WHITE))
+    for alpha in range(0, 300):
+        fade.set_alpha(alpha)
+        DISPLAYSURF.blit(fade, (x,y))
+        pygame.display.update()
+        pygame.time.delay(5)
+
+
 
 if __name__ == '__main__':
     main()

@@ -401,9 +401,7 @@ def runGame():
                 # making the piece fall faster with the down key
                 elif (event.key == K_DOWN or event.key == K_s) and fallingPiece != None:
                     movingDown = True
-                    if isValidPosition(board, fallingPiece, adjY=2):
-                        fallingPiece['y'] += 2
-                    elif isValidPosition(board, fallingPiece, adjY=1):
+                    if isValidPosition(board, fallingPiece, adjY=1):
                         fallingPiece['y'] += 1
                     lastMoveDownTime = time.time()
 
@@ -455,10 +453,15 @@ def runGame():
                 fallingPiece['x'] += 1
             lastMoveSidewaysTime = time.time()
 
-        if movingDown and time.time() - lastMoveDownTime > MOVEDOWNFREQ and isValidPosition(board, fallingPiece, adjY=1) and fallingPiece != None:
-            fallingPiece['y'] += 1
-            lastMoveDownTime = time.time()
-            lastFallTime = time.time() + DELAYLOCKIN - fallFreq
+        if movingDown and time.time() - lastMoveDownTime > MOVEDOWNFREQ and fallingPiece != None:
+            if isValidPosition(board, fallingPiece, adjY=2):
+                fallingPiece['y'] += 2
+                lastMoveDownTime = time.time()
+                lastFallTime = time.time() + DELAYLOCKIN - fallFreq
+            elif isValidPosition(board, fallingPiece, adjY=1):
+                fallingPiece['y'] += 1
+                lastMoveDownTime = time.time()
+                lastFallTime = time.time() + DELAYLOCKIN - fallFreq
 
         # let the piece fall if it is time to fall
         if time.time() - lastFallTime > fallFreq:
@@ -745,11 +748,13 @@ def drawHoldPiece(piece):
     if piece != None:
         drawPiece(piece, pixelx=WINDOWWIDTH-540, pixely=120)
 
+
 def drawText(text, x, y):
     infoSurf = BASICFONT.render(text, True, WHITE)
     infoRect = infoSurf.get_rect()
     infoRect.topleft = (x, y)
     DISPLAYSURF.blit(infoSurf, infoRect)
+
 
 def drawInstructions(x, y):
     drawText('q: Quit', x, y)
@@ -764,6 +769,7 @@ def drawInstructions(x, y):
     drawText('down, s: Soft drop', x, y + 180)
     drawText('up, x: Clockwise', x, y + 200)
     drawText('w, z: Counter clockwise', x, y + 220)
+
 
 if __name__ == '__main__':
     main()

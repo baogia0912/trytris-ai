@@ -1,0 +1,31 @@
+a new attack system with combos spins 
+
+stack spin ability up to 7 
+
+- t-spin: single send 2 line, double send 4 line, triple send 6 line 
+
+- i-spin: send 1/2/3 line from the bottom of your board to your opponent from the bottom up 
+
+- o-spin: 
+
+- s-spin: mix up 1/2/3 lines from the top 
+
+- z-spin: fix up 1/2/3 lines from the top to either side
+
+- l-spin: freeze enemy for 1/2/3 second 
+
+- j-spin: invisiblize enemy for 1/2/3 second
+
+Send attack on the next non-line clear move 
+
+- Clearing line just send like normal (0 for 0, 0 for 1, 1 for 2, 2 for 3, 4 for 4) 
+
+- 1-4 line: effect * 1-4 
+
+combos line clear send attack with new combo tabble (0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,8,8,8,9,9,9,10,10,10,11,11,11,12,12,12,100)
+
+perfectclear: permanently improve spin effects by improving spins levels (doesnt affect t spin) 
+
+- at level 2, 3, 4, 5 increase 1 second on freeze and anti-freeze, 1 line on mix up and anti-mix up, 1 line transfer and anti transfer 
+
+- revverse control

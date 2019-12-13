@@ -624,7 +624,7 @@ def GhostPiece(fallingPiece, board):
                   'y': fallingPiece['y'],
                   'color': PIECES_COLOR[fallingPiece['shape']] + 7}
 
-    for i in range(1, BOARDHEIGHT):
+    for i in range(-1, BOARDHEIGHT):
         if not isValidPosition(board, fallingPiece, adjY=i+2):
             break
     ghostPiece['y'] += i + 1

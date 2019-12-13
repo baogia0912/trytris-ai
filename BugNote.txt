@@ -1,0 +1,39 @@
+bug 1: the ghost piece start from 1 space above the correct position and then drop down one to the correct position 
+
+(fixed by changing one of the number in the ghost piece function in the y coordinate calculation)
+
+bug 2: the hard drop does not lock in right away but wait for the falldown time to kick in
+
+(fixed by appling the lockin function after the spacebar is hitted)
+
+bug 3: when implementing the 7 bag system, the bag reset after every draw
+
+(fixed by updating the bag after every draws)
+
+bug 4: when implementing the hold function the hold piece remember the x, y and rotation before hold which generate undesirable flaws
+
+(fixed by reseting the hold piece's x, y and rotation after each hold)
+
+bug 5: when implementing 4 more next peice, the next piece function as wanted but does not update on screen
+
+(fixed by redrawing each next peice at the same time the screen update)
+
+bug 6: when implementing the Super Rotation System, if the piece can not be fit after all 5 test, the pieces locked in at the first test
+
+(fixed by rotate the piece back to its original rotation if all 5 tests are invalid)
+
+bug 7: the piece spawns above the board so some piece goes off the screen and crash the game
+
+(fixed by making the board 40 in height)
+
+bug 8: the game crash when the time of the piece lock in and any other action that need a piece overlap
+
+(fixed by putting a none piece check in the checking for valid position fuction and other function that require a piece to do calculation)
+
+bug 9: when implementing 2 players mode, the pieces land but disapear
+
+(fixed by giving both players their own board, move, bag, hold, next piece and key input)
+
+bug 10: when implementing flash special move, the flash freeze up the game without updating
+
+(fixed by making the special moves its own appearing time to check for time to disapear)

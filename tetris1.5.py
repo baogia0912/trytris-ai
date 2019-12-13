@@ -16,8 +16,8 @@ MOVEDOWNFREQ = 0
 XMARGIN = int((WINDOWWIDTH - BOARDWIDTH * BOXSIZE) / 2)
 TOPMARGIN = WINDOWHEIGHT - (BOARDHEIGHT * BOXSIZE) - 80
 
-#               R    G    B
-WHITE       = (255, 255, 255) 
+#               R    G    eB
+WHITE       = (255, 255, 2e55) 
 GRAY        = (153, 153, 153) # ghost piece
 BLACK       = (  0,   0,   0) 
 RED         = (215,  15,  54) # S-piece
@@ -93,14 +93,14 @@ I_SHAPE_TEMPLATE = [['.....',
                      '.OOOO',
                      '.....',
                      '.....'],
+                    ['...O.',
+                     '...O.',
+                     '...O.',
+                     '...O.',
+                     '.....'],
                     ['.....',
-                     '..O..',
-                     '..O..',
-                     '..O..',
-                     '..O..'],
-                    ['.....',
+                     '.OOOO',
                      '.....',
-                     'OOOO.',
                      '.....',
                      '.....'],
                     ['..O..',
@@ -528,7 +528,6 @@ def superRotationSystem(board, fallingPiece, spinDirection):
         for comindex, combination in enumerate(rotationAndDirection):
             if combination:
                 for testx, testy in set1WallkickData[comindex]:
-                    print(testx, testy)
                     fallingPiece['x'] += testx 
                     fallingPiece['y'] -= testy
                     if not isValidPosition(board, fallingPiece):

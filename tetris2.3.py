@@ -36,6 +36,7 @@ ORANGE      = (227,  91,   3) # L-piece
 LIGHTBLUE   = ( 15, 155, 215) # I-piece
 YELLOW      = (227, 159,   1) # O-piece
 PINK        = (175,  40, 138) # T-piece
+FROZEN      = (165, 242, 243)
 
 S_RED         = (107,   9,  27) # S-piece
 S_GREEN       = ( 45,  88,   6) # Z-piece
@@ -48,7 +49,7 @@ S_PINK        = ( 87,  21,  69) # T-piece
 BORDERCOLOR     = GRAY2
 BGCOLOR         = BLACK
 TEXTCOLOR       = WHITE
-COLORS          = (GREEN, RED, BLUE, ORANGE, LIGHTBLUE, YELLOW, PINK, S_GREEN, S_RED, S_BLUE, S_ORANGE, S_LIGHTBLUE, S_YELLOW, S_PINK, GRAY3, GRAY4)
+COLORS          = (GREEN, RED, BLUE, ORANGE, LIGHTBLUE, YELLOW, PINK, S_GREEN, S_RED, S_BLUE, S_ORANGE, S_LIGHTBLUE, S_YELLOW, S_PINK, GRAY3, GRAY4, FROZEN)
 GAMEOVERCOLOR   = GRAY3
 
 TEMPLATEWIDTH   = 4
@@ -234,7 +235,7 @@ def main():
 
 def runGame():
     # setup variables for the start of the game
-    global loseP1, loseP2, DISPLAYSURF
+    global loseP1, loseP2, DISPLAYSURF, P1Frozen, P2Frozen
     boardP1 = getBlankBoard()
     boardP2 = getBlankBoard()
     lastMoveDownTimeP1 = time.time()
@@ -261,9 +262,46 @@ def runGame():
     movingLeftP2 = False
     movingRightP2 = False
     canHoldedP2 = True
+    P1LineRemoved = 0
+    P2LineRemoved = 0
+    P1PerfectClear = False
+    P2PerfectClear = False
+    P1backToBackPrint = False
+    P2backToBackPrint = False
+    P1Tetris = False
+    P2Tetris = False
+    P1Combo = False
+    P2Combo = False
+    P1TMini = False
+    P2TMini = False
+    P1TSingle = False
+    P2TSingle = False
+    P1TDouble = False
+    P2TDouble = False
+    P1TTriple = False
+    P2TTriple = False
+    P1Jspin = False
+    P1Lspin = False
+    P1Sspin = False
+    P1Zspin = False
+    P1Ispin = False
+    P2Jspin = False
+    P2Lspin = False
+    P2Sspin = False
+    P2Zspin = False
+    P2Ispin = False
+    P1Frozen = False
+    P2Frozen = False
+    freezeP1 = 0
+    freezeP2 = 0
+    freezeP1Timer = time.time()
+    freezeP2Timer = time.time()
 
     garbageQueueForP1 = []
     garbageQueueForP2 = []
+
+    transferQueueForP1 = []
+    transferQueueForP2 = []
 
     lineSentToP1 = 0
     lineSentToP2 = 0
@@ -391,7 +429,7 @@ def runGame():
                     return
                 elif (event.key == K_h):
                     DISPLAYSURF.fill(BGCOLOR)
-                    drawInstructions(WINDOWWIDTH/2 - 100, 200)
+                    drawInstructions(WINDOWWIDTH/2 - 100, 200, WHITE)
                     titleSurf, titleRect = makeTextObjs('Instructions', BIGFONT, TEXTCOLOR)
                     titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) - 200)
                     DISPLAYSURF.blit(titleSurf, titleRect)
@@ -430,7 +468,7 @@ def runGame():
 
             if event.type == KEYDOWN:
                 # moving the piece sideways
-                if (event.key == K_LEFT) and fallingPieceP1 != None:
+                if (event.key == K_LEFT) and fallingPieceP1 != None and not P1Frozen:
                     movingRightP1 = False
                     movingLeftP1 = True
                     if isValidPosition(boardP1, fallingPieceP1, adjX=-1):
@@ -439,7 +477,7 @@ def runGame():
                         if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                             lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
 
-                elif (event.key == K_RIGHT) and fallingPieceP1 != None:
+                elif (event.key == K_RIGHT) and fallingPieceP1 != None and not P1Frozen:
                     movingLeftP1 = False
                     movingRightP1 = True
                     if isValidPosition(boardP1, fallingPieceP1, adjX=1):
@@ -448,7 +486,7 @@ def runGame():
                         if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                             lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
                     
-                elif (event.key == K_j) and fallingPieceP2 != None:
+                elif (event.key == K_j) and fallingPieceP2 != None and not P2Frozen:
                     movingRightP2 = False
                     movingLeftP2 = True
                     if isValidPosition(boardP2, fallingPieceP2, adjX=-1):
@@ -458,7 +496,7 @@ def runGame():
                             lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
 
 
-                elif (event.key == K_l) and fallingPieceP2 != None:
+                elif (event.key == K_l) and fallingPieceP2 != None and not P2Frozen:
                     movingLeftP2 = False
                     movingRightP2 = True
                     if isValidPosition(boardP2, fallingPieceP2, adjX=1):
@@ -468,7 +506,7 @@ def runGame():
                             lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
 
                 # hold a peice
-                elif (event.key == K_e) and canHoldedP1 and fallingPieceP1 != None:
+                elif (event.key == K_e) and canHoldedP1 and fallingPieceP1 != None and not P1Frozen:
                     lastMoveSidewaysTimeP1 = time.time() + DELAYAUTOSHIFT
                     copyPieceP1 = holdPieceP1
                     holdPieceP1 = fallingPieceP1
@@ -481,7 +519,7 @@ def runGame():
                         if not isValidPosition(boardP1, fallingPieceP1):
                             fallingPieceP1['y'] = 18
                     
-                elif (event.key == K_3) and canHoldedP2 and fallingPieceP2 != None:
+                elif (event.key == K_3) and canHoldedP2 and fallingPieceP2 != None and not P2Frozen:
                     lastMoveSidewaysTimeP2 = time.time() + DELAYAUTOSHIFT
                     copyPieceP2 = holdPieceP2
                     holdPieceP2 = fallingPieceP2
@@ -495,8 +533,9 @@ def runGame():
                             fallingPieceP2['y'] = 18
 
                 # rotating the piece (if there is room to rotate)
-                elif (event.key == K_UP) and fallingPieceP1 != None:
+                elif (event.key == K_UP) and fallingPieceP1 != None and not P1Frozen:
                     P1Tspin = False
+            
                     if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                         lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
                     spinDirectionP1 = 'CW'
@@ -505,13 +544,25 @@ def runGame():
                         if isValidPosition(boardP1, fallingPieceP1) and not isValidPosition(boardP1, fallingPieceP1, adjY=-1) and is3ConnerRule(boardP1, fallingPieceP1):
                             P1Tspin = True
                         elif not isValidPosition(boardP1, fallingPieceP1):
-                            superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
+                            superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1, P1Jspin, P1Lspin, P1Sspin, P1Zspin, P1Ispin)
                             if is3ConnerRule(boardP1, fallingPieceP1):
                                 P1Tspin = True
+                    elif isValidPosition(boardP1, fallingPieceP1):
+                        if fallingPieceP1['shape'] == 'J':
+                            P1Jspin = False
+                        if fallingPieceP1['shape'] == 'L':
+                            P1Lspin = False
+                        if fallingPieceP1['shape'] == 'S':
+                            P1Sspin = False
+                        if fallingPieceP1['shape'] == 'Z':
+                            P1Zspin = False
+                        if fallingPieceP1['shape'] == 'I':
+                            P1Ispin = False
                     else:
-                        superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
-                elif (event.key == K_w) and fallingPieceP1 != None: # rotate the other direction
+                        P1Jspin, P1Lspin, P1Sspin, P1Zspin, P1Ispin = superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1, P1Jspin, P1Lspin, P1Sspin, P1Zspin, P1Ispin)
+                elif (event.key == K_w) and fallingPieceP1 != None and not P1Frozen: # rotate the other direction
                     P1Tspin = False
+                    
                     if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                         lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
                     spinDirectionP1 = 'CCW'
@@ -520,20 +571,54 @@ def runGame():
                         if isValidPosition(boardP1, fallingPieceP1) and not isValidPosition(boardP1, fallingPieceP1, adjY=-1) and is3ConnerRule(boardP1, fallingPieceP1):
                             P1Tspin = True
                         elif not isValidPosition(boardP1, fallingPieceP1):
-                            superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
+                            superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1, P1Jspin, P1Lspin, P1Sspin, P1Zspin, P1Ispin)
                             if is3ConnerRule(boardP1, fallingPieceP1):
                                 P1Tspin = True
+                    elif isValidPosition(boardP1, fallingPieceP1):
+                        if fallingPieceP1['shape'] == 'J':
+                            P1Jspin = False
+                        if fallingPieceP1['shape'] == 'L':
+                            P1Lspin = False
+                        if fallingPieceP1['shape'] == 'S':
+                            P1Sspin = False
+                        if fallingPieceP1['shape'] == 'Z':
+                            P1Zspin = False
+                        if fallingPieceP1['shape'] == 'I':
+                            P1Ispin = False
                     else:
-                        superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1)
-                elif (event.key == K_q) and fallingPieceP1 != None: # rotate the other direction
+                        P1Jspin, P1Lspin, P1Sspin, P1Zspin, P1Ispin = superRotationSystem(boardP1, fallingPieceP1, spinDirectionP1, P1Jspin, P1Lspin, P1Sspin, P1Zspin, P1Ispin)
+                elif (event.key == K_q) and fallingPieceP1 != None and not P1Frozen: # rotate the other direction
                     if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                         lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
                     fallingPieceP1['rotation'] = (fallingPieceP1['rotation'] + 2) % len(PIECES[fallingPieceP1['shape']])
                     if not isValidPosition(boardP1, fallingPieceP1):
                         fallingPieceP1['rotation'] = (fallingPieceP1['rotation'] - 2) % len(PIECES[fallingPieceP1['shape']])
+                    if isValidPosition(boardP1, fallingPieceP1) and not isValidPosition(boardP1, fallingPieceP1, adjY=-1):
+                        if fallingPieceP1['shape'] == 'J':
+                            P1Jspin = True
+                        if fallingPieceP1['shape'] == 'L':
+                            P1Lspin = True
+                        if fallingPieceP1['shape'] == 'S':
+                            P1Sspin = True
+                        if fallingPieceP1['shape'] == 'Z':
+                            P1Zspin = True
+                        if fallingPieceP1['shape'] == 'I':
+                            P1Ispin = True
+                    else:
+                        if fallingPieceP1['shape'] == 'J':
+                            P1Jspin = False
+                        if fallingPieceP1['shape'] == 'L':
+                            P1Lspin = False
+                        if fallingPieceP1['shape'] == 'S':
+                            P1Sspin = False
+                        if fallingPieceP1['shape'] == 'Z':
+                            P1Zspin = False
+                        if fallingPieceP1['shape'] == 'I':
+                            P1Ispin = False
 
-                elif (event.key == K_i) and fallingPieceP2 != None:
+                elif (event.key == K_i) and fallingPieceP2 != None and not P2Frozen:
                     P2Tspin = False
+                    
                     if not isValidPosition(boardP2, fallingPieceP2, adjY=1):
                         lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
                     spinDirectionP2 = 'CW'
@@ -542,13 +627,25 @@ def runGame():
                         if isValidPosition(boardP2, fallingPieceP2) and not isValidPosition(boardP2, fallingPieceP2, adjY=-1) and is3ConnerRule(boardP2, fallingPieceP2):
                             P2Tspin = True
                         elif not isValidPosition(boardP2, fallingPieceP2):
-                            superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
+                            superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2, P2Jspin, P2Lspin, P2Sspin, P2Zspin, P2Ispin)
                             if is3ConnerRule(boardP2, fallingPieceP2):
                                 P2Tspin = True
+                    elif isValidPosition(boardP2, fallingPieceP2):
+                        if fallingPieceP2['shape'] == 'J':
+                            P2Jspin = False
+                        if fallingPieceP2['shape'] == 'L':
+                            P2Lspin = False
+                        if fallingPieceP2['shape'] == 'S':
+                            P2Sspin = False
+                        if fallingPieceP2['shape'] == 'Z':
+                            P2Zspin = False
+                        if fallingPieceP2['shape'] == 'I':
+                            P2Ispin = False
                     else:
-                        superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
-                elif (event.key == K_2) and fallingPieceP2 != None: # rotate the other direction
+                        P2Jspin, P2Lspin, P2Sspin, P2Zspin, P2Ispin = superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2, P2Jspin, P2Lspin, P2Sspin, P2Zspin, P2Ispin)
+                elif (event.key == K_2) and fallingPieceP2 != None and not P2Frozen: # rotate the other direction
                     P2Tspin = False
+                    
                     if not isValidPosition(boardP2, fallingPieceP2, adjY=1):
                         lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
                     spinDirectionP2 = 'CCW'
@@ -557,21 +654,55 @@ def runGame():
                         if isValidPosition(boardP2, fallingPieceP2) and not isValidPosition(boardP2, fallingPieceP2, adjY=-1) and is3ConnerRule(boardP2, fallingPieceP2):
                             P2Tspin = True
                         elif not isValidPosition(boardP2, fallingPieceP2):
-                            superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
+                            superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2, P2Jspin, P2Lspin, P2Sspin, P2Zspin, P2Ispin)
                             if is3ConnerRule(boardP2, fallingPieceP2):
                                 P2Tspin = True
+                    elif isValidPosition(boardP2, fallingPieceP2):
+                        if fallingPieceP2['shape'] == 'J':
+                            P2Jspin = False
+                        if fallingPieceP2['shape'] == 'L':
+                            P2Lspin = False
+                        if fallingPieceP2['shape'] == 'S':
+                            P2Sspin = False
+                        if fallingPieceP2['shape'] == 'Z':
+                            P2Zspin = False
+                        if fallingPieceP2['shape'] == 'I':
+                            P2Ispin = False
                     else:
-                        superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2)
-                elif (event.key == K_1) and fallingPieceP2 != None: # rotate the other direction
+                        P2Jspin, P2Lspin, P2Sspin, P2Zspin, P2Ispin = superRotationSystem(boardP2, fallingPieceP2, spinDirectionP2, P2Jspin, P2Lspin, P2Sspin, P2Zspin, P2Ispin)
+
+                elif (event.key == K_1) and fallingPieceP2 != None and not P2Frozen: # rotate the other direction
                     if not isValidPosition(boardP2, fallingPieceP2, adjY=1):
                         lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
                     fallingPieceP2['rotation'] = (fallingPieceP2['rotation'] + 2) % len(PIECES[fallingPieceP2['shape']])
                     if not isValidPosition(boardP2, fallingPieceP2):
                         fallingPieceP2['rotation'] = (fallingPieceP2['rotation'] - 2) % len(PIECES[fallingPieceP2['shape']])
+                    if isValidPosition(boardP2, fallingPieceP2) and not isValidPosition(boardP2, fallingPieceP2, adjY=-1):
+                        if fallingPieceP2['shape'] == 'J':
+                            P2Jspin = True
+                        if fallingPieceP2['shape'] == 'L':
+                            P2Lspin = True
+                        if fallingPieceP2['shape'] == 'S':
+                            P2Sspin = True
+                        if fallingPieceP2['shape'] == 'Z':
+                            P2Zspin = True
+                        if fallingPieceP2['shape'] == 'I':
+                            P2Ispin = True
+                    else:
+                        if fallingPieceP2['shape'] == 'J':
+                            P2Jspin = False
+                        if fallingPieceP2['shape'] == 'L':
+                            P2Lspin = False
+                        if fallingPieceP2['shape'] == 'S':
+                            P2Sspin = False
+                        if fallingPieceP2['shape'] == 'Z':
+                            P2Zspin = False
+                        if fallingPieceP2['shape'] == 'I':
+                            P2Ispin = False
 
 
                 # making the piece fall faster with the down key
-                elif (event.key == K_DOWN) and fallingPieceP1 != None:
+                elif (event.key == K_DOWN) and fallingPieceP1 != None and not P1Frozen:
                     movingDownP1 = True
                     if isValidPosition(boardP1, fallingPieceP1, adjY=2):
                         fallingPieceP1['y'] += 2
@@ -579,7 +710,7 @@ def runGame():
                         fallingPieceP1['y'] += 1
                     lastMoveDownTimeP1 = time.time()
 
-                elif (event.key == K_k) and fallingPieceP2 != None:
+                elif (event.key == K_k) and fallingPieceP2 != None and not P2Frozen:
                     movingDownP2 = True
                     if isValidPosition(boardP2, fallingPieceP2, adjY=2):
                         fallingPieceP2['y'] += 2
@@ -588,16 +719,38 @@ def runGame():
                     lastMoveDownTimeP2 = time.time()
 
                 # move the current piece all the way down
-                elif event.key == K_SPACE and fallingPieceP1 != None:
+                elif event.key == K_SPACE and fallingPieceP1 != None and not P1Frozen:
                     while isValidPosition(boardP1, fallingPieceP1, adjY=1):
                         fallingPieceP1['y'] += 1
                     addToBoard(boardP1, fallingPieceP1)
-                    lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter)
+                    lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple)
                     if P1LineRemoved == 0:
                         for line in garbageQueueForP1:
                             reciveGarbage(boardP1, line)
                         garbageQueueForP1 = []
+                        garbageTransferTo(boardP1, transferQueueForP1)
+                        transferQueueForP1 = []
                     else:
+                        if P1Sspin:
+                            mixUpTop(boardP2, P1LineRemoved)
+                        if P1Zspin:
+                            mixUpBottom(boardP2, P1LineRemoved)
+                        if P1Lspin:
+                            freezeP2 = P1LineRemoved
+                            freezeP2Timer = time.time()
+                        if P1Jspin:
+                            burnGarbage(boardP1, P1LineRemoved)
+                        if P1Ispin:
+                            print(P1LineRemoved)
+                            if transferQueueForP2 == []:
+                                transferQueueForP2 = garbageTransferFrom(boardP1, P1LineRemoved)
+                                for x in range(BOARDWIDTH):
+                                    print(transferQueueForP2[x])
+                            else:
+                                lineTransferForP2 = garbageTransferFrom(boardP1, P1LineRemoved)
+                                for x in range(BOARDWIDTH):
+                                    transferQueueForP2[x] += lineTransferForP2[x]
+                                    print(transferQueueForP2[x])
                         while lineSentToP2 > 0 and garbageQueueForP1 != []:
                             for line in garbageQueueForP1:
                                 if lineSentToP2 >= line:
@@ -609,7 +762,29 @@ def runGame():
                         if lineSentToP2 > 0:
                             garbageQueueForP2.append(lineSentToP2)
                     P1Tspin = False
+                    P1Jspin = False 
+                    P1Lspin = False
+                    P1Sspin = False
+                    P1Zspin = False
+                    P1Ispin = False
                     canHoldedP1 = True
+                    if P1PerfectClear:
+                        P1PCTimer = time.time()
+                    if P1backToBackPrint:
+                        P1B2BTimer = time.time()
+                    if P1Tetris:
+                        P1TetrisTimer = time.time()
+                    if P1Combo:
+                        P1ComboTimer = time.time()
+                    if P1TMini:
+                        P1TMiniTimer = time.time()
+                    if P1TSingle:
+                        P1TSingleTimer = time.time()
+                    if P1TDouble:
+                        P1TDoubleTimer = time.time()
+                    if P1TTriple:
+                        P1TTripleTimer = time.time()
+
                     fallingPieceP1 = nextPiece1P1
                     if len(bagP1) == 0:
                         bagP1 = list(PIECES.keys())
@@ -634,16 +809,34 @@ def runGame():
                             drawHiddenBoardP1()
                             return # can't fit a new piece on the board, so game over
 
-                elif event.key == K_v and fallingPieceP2 != None:
+                elif event.key == K_v and fallingPieceP2 != None and not P2Frozen:
                     while isValidPosition(boardP2, fallingPieceP2, adjY=1):
                         fallingPieceP2['y'] += 1
                     addToBoard(boardP2, fallingPieceP2)
-                    lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter)
+                    lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple)
                     if P2LineRemoved == 0:
                         for line in garbageQueueForP2:
                             reciveGarbage(boardP2, line)
                         garbageQueueForP2 = []
+                        garbageTransferTo(boardP2, transferQueueForP2)
+                        transferQueueForP2 = []
                     else:
+                        if P2Sspin:
+                            mixUpTop(boardP1, P2LineRemoved)
+                        if P2Zspin:
+                            mixUpBottom(boardP1, P2LineRemoved)
+                        if P2Lspin:
+                            freezeP1 = P2LineRemoved
+                            freezeP1Timer = time.time()
+                        if P2Jspin:
+                            burnGarbage(boardP2, P2LineRemoved)
+                        if P2Ispin:
+                            if transferQueueForP1 == []:
+                                transferQueueForP1 = garbageTransferFrom(boardP2, P2LineRemoved)
+                            else:
+                                lineTransferForP1 = garbageTransferFrom(boardP2, P2LineRemoved)
+                                for x in range(BOARDWIDTH):
+                                    transferQueueForP1[x] += lineTransferForP1[x]
                         while lineSentToP1 > 0 and garbageQueueForP2 != []:
                             for line in garbageQueueForP2:
                                 if lineSentToP1 >= line:
@@ -655,7 +848,29 @@ def runGame():
                         if lineSentToP1 > 0:
                             garbageQueueForP1.append(lineSentToP1)
                     P2Tspin = False
+                    P2Jspin = False 
+                    P2Lspin = False
+                    P2Sspin = False
+                    P2Zspin = False
+                    P2Ispin = False
                     canHoldedP2 = True
+                    if P2PerfectClear:
+                        P2PCTimer = time.time()
+                    if P2backToBackPrint:
+                        P2B2BTimer = time.time()
+                    if P2Tetris:
+                        P2TetrisTimer = time.time()
+                    if P2Combo:
+                        P2ComboTimer = time.time()
+                    if P2TMini:
+                        P2TMiniTimer = time.time()
+                    if P2TSingle:
+                        P2TSingleTimer = time.time()
+                    if P2TDouble:
+                        P2TDoubleTimer = time.time()
+                    if P2TTriple:
+                        P2TTripleTimer = time.time()
+
                     fallingPieceP2 = nextPiece1P2
                     if len(bagP2) == 0:
                         bagP2 = list(PIECES.keys())
@@ -681,42 +896,70 @@ def runGame():
                             return # can't fit a new piece on the board, so game over    
                 
         # handle moving the piece because of user input
-        if (movingLeftP1 or movingRightP1) and time.time() - lastMoveSidewaysTimeP1 > AUTOREPEATRATE and fallingPieceP1 != None:
+        if (movingLeftP1 or movingRightP1) and time.time() - lastMoveSidewaysTimeP1 > AUTOREPEATRATE and fallingPieceP1 != None and not P1Frozen:
             if movingLeftP1 and isValidPosition(boardP1, fallingPieceP1, adjX=-1):
                 fallingPieceP1['x'] -= 1
             elif movingRightP1 and isValidPosition(boardP1, fallingPieceP1, adjX=1):
                 fallingPieceP1['x'] += 1
             lastMoveSidewaysTimeP1 = time.time()
         
-        if (movingLeftP2 or movingRightP2) and time.time() - lastMoveSidewaysTimeP2 > AUTOREPEATRATE and fallingPieceP2 != None:
+        if (movingLeftP2 or movingRightP2) and time.time() - lastMoveSidewaysTimeP2 > AUTOREPEATRATE and fallingPieceP2 != None and not P2Frozen:
             if movingLeftP2 and isValidPosition(boardP2, fallingPieceP2, adjX=-1):
                 fallingPieceP2['x'] -= 1
             elif movingRightP2 and isValidPosition(boardP2, fallingPieceP2, adjX=1):
                 fallingPieceP2['x'] += 1
             lastMoveSidewaysTimeP2 = time.time()
 
-        if movingDownP1 and time.time() - lastMoveDownTimeP1 > MOVEDOWNFREQ and isValidPosition(boardP1, fallingPieceP1, adjY=1) and fallingPieceP1 != None:
-            fallingPieceP1['y'] += 1
-            lastMoveDownTimeP1 = time.time()
-            lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
+        if movingDownP1 and time.time() - lastMoveDownTimeP1 > MOVEDOWNFREQ and fallingPieceP1 != None and fallingPieceP1 != None and not P1Frozen:
+            if isValidPosition(boardP1, fallingPieceP1, adjY=2):
+                fallingPieceP1['y'] += 2
+                lastMoveDownTimeP1 = time.time()
+                lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
+            elif isValidPosition(boardP1, fallingPieceP1, adjY=1):
+                fallingPieceP1['y'] += 1
+                lastMoveDownTimeP1 = time.time()
+                lastFallTimeP1 = time.time() + DELAYLOCKIN - fallFreq
 
-        if movingDownP2 and time.time() - lastMoveDownTimeP2 > MOVEDOWNFREQ and isValidPosition(boardP2, fallingPieceP2, adjY=1) and fallingPieceP2 != None:
-            fallingPieceP2['y'] += 1
-            lastMoveDownTimeP2 = time.time()
-            lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
+        if movingDownP2 and time.time() - lastMoveDownTimeP2 > MOVEDOWNFREQ and fallingPieceP2 != None and fallingPieceP2 != None and not P2Frozen:
+            if isValidPosition(boardP2, fallingPieceP2, adjY=2):
+                fallingPieceP2['y'] += 2
+                lastMoveDownTimeP2 = time.time()
+                lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
+            elif isValidPosition(boardP2, fallingPieceP2, adjY=1):
+                fallingPieceP2['y'] += 1
+                lastMoveDownTimeP2 = time.time()
+                lastFallTimeP2 = time.time() + DELAYLOCKIN - fallFreq
 
         # let the piece fall if it is time to fall
-        if time.time() - lastFallTimeP1 > fallFreq:
+        if time.time() - lastFallTimeP1 > fallFreq and not P1Frozen:
             # see if the piece has landed
             if not isValidPosition(boardP1, fallingPieceP1, adjY=1):
                 # falling piece has landed, set it on the board
                 addToBoard(boardP1, fallingPieceP1)
-                lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter)
+                lineSentToP2, P1backToBack, P1ComboCounter, P1LineRemoved, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple = sendLineFromP1(boardP1, removeCompleteLines(boardP1), P1Tspin, P1backToBack, P1ComboCounter, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple)
                 if P1LineRemoved == 0:
                     for line in garbageQueueForP1:
                         reciveGarbage(boardP1, line)
                     garbageQueueForP1 = []
+                    garbageTransferTo(boardP1, transferQueueForP1)
+                    transferQueueForP1 = []
                 else:
+                    if P1Sspin:
+                        mixUpTop(boardP2, P1LineRemoved)
+                    if P1Zspin:
+                        mixUpBottom(boardP2, P1LineRemoved)
+                    if P1Lspin:
+                        freezeP2 = P1LineRemoved
+                        freezeP2Timer = time.time()
+                    if P1Jspin:
+                        burnGarbage(boardP1, P1LineRemoved)
+                    if P1Ispin:
+                        if transferQueueForP2 == []:
+                            transferQueueForP2 = garbageTransferFrom(boardP1, P1LineRemoved)
+                        else:
+                            lineTransferForP2 = garbageTransferFrom(boardP1, P1LineRemoved)
+                            for x in range(BOARDWIDTH):
+                                transferQueueForP2[x] += lineTransferForP2[x]
                     while lineSentToP2 > 0 and garbageQueueForP1 != []:
                         for line in garbageQueueForP1:
                             if lineSentToP2 >= line:
@@ -728,7 +971,29 @@ def runGame():
                     if lineSentToP2 > 0:
                         garbageQueueForP2.append(lineSentToP2)
                 P1Tspin = False
+                P1Jspin = False 
+                P1Lspin = False
+                P1Sspin = False
+                P1Zspin = False
+                P1Ispin = False
                 canHoldedP1 = True
+                if P1PerfectClear:
+                    P1PCTimer = time.time()
+                if P1backToBackPrint:
+                    P1B2BTimer = time.time()
+                if P1Tetris:
+                    P1TetrisTimer = time.time()
+                if P1Combo:
+                    P1ComboTimer = time.time()
+                if P1TMini:
+                    P1TMiniTimer = time.time()
+                if P1TSingle:
+                    P1TSingleTimer = time.time()
+                if P1TDouble:
+                    P1TDoubleTimer = time.time()
+                if P1TTriple:
+                    P1TTripleTimer = time.time()
+            
                 # No falling piece in play, so start a new piece at the top
                 fallingPieceP1 = nextPiece1P1
                 if len(bagP1) == 0:
@@ -758,17 +1023,35 @@ def runGame():
                 fallingPieceP1['y'] += 1
                 lastFallTimeP1 = time.time()
 
-        if time.time() - lastFallTimeP2 > fallFreq:
+        if time.time() - lastFallTimeP2 > fallFreq and not P2Frozen:
             # see if the piece has landed
             if not isValidPosition(boardP2, fallingPieceP2, adjY=1):
                 # falling piece has landed, set it on the board
                 addToBoard(boardP2, fallingPieceP2)
-                lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter)
+                lineSentToP1, P2backToBack, P2ComboCounter, P2LineRemoved, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple = sendLineFromP2(boardP2, removeCompleteLines(boardP2), P2Tspin, P2backToBack, P2ComboCounter, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple)
                 if P2LineRemoved == 0:
                     for line in garbageQueueForP2:
                         reciveGarbage(boardP2, line)
                     garbageQueueForP2 = []
+                    garbageTransferTo(boardP2, transferQueueForP2)
+                    transferQueueForP2 = []
                 else:
+                    if P2Sspin:
+                        mixUpTop(boardP1, P2LineRemoved)
+                    if P2Zspin:
+                        mixUpBottom(boardP1, P2LineRemoved)
+                    if P2Lspin:
+                        freezeP1 = P2LineRemoved
+                        freezeP1Timer = time.time()
+                    if P2Jspin:
+                            burnGarbage(boardP2, P2LineRemoved)
+                    if P2Ispin:
+                        if transferQueueForP1 == []:
+                            transferQueueForP1 = garbageTransferFrom(boardP2, P2LineRemoved)
+                        else:
+                            lineTransferForP1 = garbageTransferFrom(boardP2, P2LineRemoved)
+                            for x in range(BOARDWIDTH):
+                                transferQueueForP1[x] += lineTransferForP1[x]
                     while lineSentToP1 > 0 and garbageQueueForP2 != []:
                         for line in garbageQueueForP2:
                             if lineSentToP1 >= line:
@@ -780,7 +1063,29 @@ def runGame():
                     if lineSentToP1 > 0:
                         garbageQueueForP1.append(lineSentToP1)
                 P2Tspin = False
+                P2Jspin = False 
+                P2Lspin = False
+                P2Sspin = False
+                P2Zspin = False
+                P2Ispin = False
                 canHoldedP2 = True
+                if P2PerfectClear:
+                    P2PCTimer = time.time()
+                if P2backToBackPrint:
+                    P2B2BTimer = time.time()
+                if P2Tetris:
+                    P2TetrisTimer = time.time()
+                if P2Combo:
+                    P2ComboTimer = time.time()
+                if P2TMini:
+                    P2TMiniTimer = time.time()
+                if P2TSingle:
+                    P2TSingleTimer = time.time()
+                if P2TDouble:
+                    P2TDoubleTimer = time.time()
+                if P2TTriple:
+                    P2TTripleTimer = time.time()
+
                 # No falling piece in play, so start a new piece at the top
                 fallingPieceP2 = nextPiece1P2
                 if len(bagP2) == 0:
@@ -818,7 +1123,7 @@ def runGame():
         drawHoldPieceP1(holdPieceP1)
         drawNextPieceP2(NEXT_PIECESP2)
         drawHoldPieceP2(holdPieceP2)
-        drawText('Press h for help', 20, 20)
+        drawText('Press h for help', 20, 20, WHITE)
         if fallingPieceP1 != None:
             drawPieceP1(GhostPiece(fallingPieceP1, boardP1))
             drawPieceP1(fallingPieceP1)
@@ -830,6 +1135,143 @@ def runGame():
         drawHiddenBoardP1()
         drawHiddenBoardP2()
 
+        if P1Tspin:
+            drawText('T-Spin: ' + str(P1Tspin),20,200, BLUE)
+        else:
+            drawText('T-Spin: ' + str(P1Tspin),20,200, WHITE)
+
+        if P1Lspin:
+            drawText('L-Spin: ' + str(P1Lspin),20,220, BLUE)
+        else:
+            drawText('L-Spin: ' + str(P1Lspin),20,220, WHITE)
+        
+        if P1Jspin:
+            drawText('J-Spin: ' + str(P1Jspin),20,240, BLUE)
+        else:
+            drawText('J-Spin: ' + str(P1Jspin),20,240, WHITE)
+            
+        if P1Sspin:
+            drawText('S-Spin: ' + str(P1Sspin),20,260, BLUE)
+        else:
+            drawText('S-Spin: ' + str(P1Sspin),20,260, WHITE)
+            
+        if P1Zspin:
+            drawText('Z-Spin: ' + str(P1Zspin),20,280, BLUE)
+        else:
+            drawText('Z-Spin: ' + str(P1Zspin),20,280, WHITE)
+            
+        if P1Ispin:
+            drawText('I-Spin: ' + str(P1Ispin),20,300, BLUE)
+        else:    
+            drawText('I-Spin: ' + str(P1Ispin),20,300, WHITE)
+
+        if P2Tspin:
+            drawText('T-Spin: ' + str(P2Tspin),620,200, BLUE)
+        else:
+            drawText('T-Spin: ' + str(P2Tspin),620,200, WHITE)
+            
+        if P2Jspin:
+            drawText('J-Spin: ' + str(P2Jspin),620,220, BLUE)
+        else:    
+            drawText('J-Spin: ' + str(P2Jspin),620,220, WHITE)
+            
+        if P2Lspin:
+            drawText('L-Spin: ' + str(P2Lspin),620,240, BLUE)
+        else:    
+            drawText('L-Spin: ' + str(P2Lspin),620,240, WHITE)
+            
+        if P2Sspin:
+            drawText('S-Spin: ' + str(P2Sspin),620,260, BLUE)
+        else:    
+            drawText('S-Spin: ' + str(P2Sspin),620,260, WHITE)
+            
+        if P2Zspin:
+            drawText('Z-Spin: ' + str(P2Zspin),620,280, BLUE)
+        else:   
+            drawText('Z-Spin: ' + str(P2Zspin),620,280, WHITE)
+            
+        if P2Ispin:
+            drawText('I-Spin: ' + str(P2Ispin),620,300, BLUE)
+        else:    
+            drawText('I-Spin: ' + str(P2Ispin),620,300, WHITE)
+
+        drawSpecialMove(60, 300, P1ComboCounter, P1Tspin, P1backToBackPrint, boardP1, P1Tetris, P1PerfectClear, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple)
+        drawSpecialMove(660, 300, P2ComboCounter, P2Tspin, P2backToBackPrint, boardP2, P2Tetris, P2PerfectClear, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple)
+        
+        if time.time() - freezeP1Timer < freezeP1:
+            P1Frozen = True
+        else:
+            P1Frozen = False
+
+        if time.time() - freezeP2Timer < freezeP2:
+            P2Frozen = True
+        else:
+            P2Frozen = False
+
+        if P1PerfectClear:
+            if time.time() - P1PCTimer > 1:
+                P1PerfectClear = False
+
+        if P2PerfectClear:
+            if time.time() - P2PCTimer > 1:
+                P2PerfectClear = False
+
+        if P1backToBackPrint:
+            if time.time() - P1B2BTimer > 1:
+                P1backToBackPrint = False
+
+        if P2backToBackPrint:
+            if time.time() - P2B2BTimer > 1:
+                P2backToBackPrint = False
+
+        if P1Tetris:
+            if time.time() - P1TetrisTimer > 1:
+                P1Tetris = False
+
+        if P2Tetris:
+            if time.time() - P2TetrisTimer > 1:
+                P2Tetris = False
+
+        if P1Combo:
+            if time.time() - P1ComboTimer > 1:
+                P1Combo = False
+
+        if P2Combo:
+            if time.time() - P2ComboTimer > 1:
+                P2Combo = False
+
+        if P1TMini:
+            if time.time() - P1TMiniTimer > 1:
+                P1TMini = False
+
+        if P2TMini:
+            if time.time() - P2TMiniTimer > 1:
+                P2TMini = False
+
+        if P1TSingle:
+            if time.time() - P1TSingleTimer > 1:
+                P1TSingle = False
+
+        if P2TSingle:
+            if time.time() - P2TSingleTimer > 1:
+                P2TSingle = False
+
+        if P1TDouble:
+            if time.time() - P1TDoubleTimer > 1:
+                P1TDouble = False
+
+        if P2TDouble:
+            if time.time() - P2TDoubleTimer > 1:
+                P2TDouble = False
+
+        if P1TTriple:
+            if time.time() - P1TTripleTimer > 1:
+                P1TTriple = False
+
+        if P2TTriple:
+            if time.time() - P2TTripleTimer > 1:
+                P2TTriple = False
+                
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
@@ -914,7 +1356,7 @@ def addToBoard(board, piece):
     # fill in the board based on piece's location, shape, and rotation
     for x in range(TEMPLATEWIDTH):
         for y in range(TEMPLATEHEIGHT):
-            if PIECES[piece['shape']][piece['rotation']][y][x] != BLANK:
+            if piece!=None and PIECES[piece['shape']][piece['rotation']][y][x] != BLANK:
                 board[x + piece['x']][y + piece['y']] = piece['color']
 
 
@@ -961,7 +1403,7 @@ def is3ConnerRule(board, piece, adjX=0, adjY=0):
         return False
     
 
-def superRotationSystem(board, fallingPiece, spinDirection):
+def superRotationSystem(board, fallingPiece, spinDirection, Jspin, Lspin, Sspin, Zspin, Ispin):
     set1 = ['J', 'L', 'S', 'T', 'Z']
     set2 = ['I']
 
@@ -984,7 +1426,15 @@ def superRotationSystem(board, fallingPiece, spinDirection):
                         fallingPiece['x'] -= testx 
                         fallingPiece['y'] += testy
                     else:
-                        return
+                        if fallingPiece['shape'] == 'J':
+                            Jspin = True
+                        if fallingPiece['shape'] == 'L':
+                            Lspin = True
+                        if fallingPiece['shape'] == 'S':
+                            Sspin = True
+                        if fallingPiece['shape'] == 'Z':
+                            Zspin = True
+                        return Jspin, Lspin, Sspin, Zspin, Ispin
     if fallingPiece['shape'] in set2 and not isValidPosition(board, fallingPiece):
         for index, combination in enumerate(rotationAndDirection):
             if combination:
@@ -995,18 +1445,39 @@ def superRotationSystem(board, fallingPiece, spinDirection):
                         fallingPiece['x'] -= testx 
                         fallingPiece['y'] += testy
                     else:
-                        return
+                        Ispin = True
+                        return Jspin, Lspin, Sspin, Zspin, Ispin
     if not isValidPosition(board, fallingPiece): 
         if spinDirection == 'CW':
             fallingPiece['rotation'] = (fallingPiece['rotation'] - 1) % len(PIECES[fallingPiece['shape']])
+            
         elif spinDirection == 'CCW':
             fallingPiece['rotation'] = (fallingPiece['rotation'] + 1) % len(PIECES[fallingPiece['shape']])
+    if not Jspin:
+        Jspin = False
+    if not Lspin:
+        Lspin = False
+    if not Sspin:
+        Sspin = False
+    if not Zspin:
+        Zspin = False
+    if not Ispin:
+        Ispin = False
+         
+    return Jspin, Lspin, Sspin, Zspin, Ispin
 
 
 def isCompleteLine(board, y):
     # Return True if the line filled with boxes with no gaps
     for x in range(BOARDWIDTH):
         if board[x][y] == BLANK:
+            return False
+    return True
+
+
+def isBlankLine(board, y):
+    for x in range(BOARDWIDTH):
+        if board[x][y] != BLANK:
             return False
     return True
 
@@ -1049,7 +1520,96 @@ def reciveGarbage(board, line):
         counter += 1
 
 
-def sendLineFromP1(board, numLinesRemoved, P1Tspin, P1backToBack, P1ComboCounter):
+def garbageTransferFrom(board, line):
+
+    #take out the amount of line from the first board
+    lineToSend = []
+    y = BOARDHEIGHT - 1
+
+
+    for x in range(BOARDWIDTH):
+        lineToSend.append(board[x][-1:(-1*line) - 1:-1])
+
+    while y >= BOARDHEIGHT - line:
+
+        for pullDownY in range(BOARDHEIGHT - 1, 0, -1):
+            for x in range(BOARDWIDTH):
+                board[x][pullDownY] = board[x][pullDownY - 1]
+        
+        for x in range(BOARDWIDTH):
+            board[x][0] = BLANK
+        y -= 1
+    return lineToSend
+
+
+def garbageTransferTo(board, line):
+    #add to the second board
+    if line != []:
+        y = 0
+        counter = 0
+        len(line[0])
+        while counter < len(line[0]):
+            for pushUpY in range(y, BOARDHEIGHT - 1):
+                for x in range(BOARDWIDTH):
+                    board[x][pushUpY] = board[x][pushUpY + 1]
+            for x in range(BOARDWIDTH):
+                board[x][BOARDHEIGHT - 1] = line[x][-1-counter]
+            counter += 1
+
+
+def burnGarbage(board, line):
+
+    y = BOARDHEIGHT - 1 
+    while y >= BOARDHEIGHT - line:
+
+        for pullDownY in range(BOARDHEIGHT - 1, 0, -1):
+            for x in range(BOARDWIDTH):
+                board[x][pullDownY] = board[x][pullDownY - 1]
+        
+        for x in range(BOARDWIDTH):
+            board[x][0] = BLANK
+        y -= 1
+
+
+def mixUpTop(board, line):
+    y = 0
+    counter = 0
+    while counter < line and y < BOARDHEIGHT:
+        if isBlankLine(board, y):
+            y += 1
+            continue
+        #mix
+        copyRow = []
+        for x in range(BOARDWIDTH):
+            copyRow.append(board[x][y])
+
+        random.shuffle(copyRow)
+
+        for x in range(BOARDWIDTH):
+            board[x][y] = copyRow[x]
+
+        y += 1
+        counter += 1
+
+
+def mixUpBottom(board, line):
+    y = BOARDHEIGHT - 1
+    counter = 0
+    while counter < line:
+        copyRow = []
+        for x in range(BOARDWIDTH):
+            copyRow.append(board[x][y])
+
+        random.shuffle(copyRow)
+
+        for x in range(BOARDWIDTH):
+            board[x][y] = copyRow[x]
+            
+        y -= 1
+        counter += 1
+
+
+def sendLineFromP1(board, numLinesRemoved, P1Tspin, P1backToBack, P1ComboCounter, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple):
     blankBoard = getBlankBoard()
     lineSent = 0
 
@@ -1066,31 +1626,36 @@ def sendLineFromP1(board, numLinesRemoved, P1Tspin, P1backToBack, P1ComboCounter
             P1backToBack = False
             lineSent += ATTACKTABLE[3]
         elif numLinesRemoved == 4:
-            print('tetris')
+            P1Tetris = True
             if P1backToBack:
-                print('B2B')
+                P1backToBackPrint = True
                 lineSent += ATTACKTABLE[10]
             lineSent += ATTACKTABLE[4]
             P1backToBack = True
     else:
-        print('T-spin')
         if P1backToBack:
-            print('B2B')
+            P1backToBackPrint = True
             lineSent += ATTACKTABLE[10]
         P1backToBack = True
         if numLinesRemoved == 0:
+            P1TMini = True
             lineSent += ATTACKTABLE[8]
         elif numLinesRemoved == 1:
+            P1TSingle = True
             lineSent += ATTACKTABLE[7]
         elif numLinesRemoved == 2:
+            P1TDouble = True
             lineSent += ATTACKTABLE[5]
         elif numLinesRemoved == 3:
+            P1TTriple = True
             lineSent += ATTACKTABLE[6]
 
     if blankBoard == board:
+        P1PerfectClear = True
         lineSent += ATTACKTABLE[9]
         
     if numLinesRemoved > 0:
+        P1Combo = True
         P1ComboCounter += 1
         if P1ComboCounter <= 12:
             lineSent += COMBOTABLE[P1ComboCounter - 1]
@@ -1099,10 +1664,10 @@ def sendLineFromP1(board, numLinesRemoved, P1Tspin, P1backToBack, P1ComboCounter
     else:
         P1ComboCounter = 0
     
-    return lineSent, P1backToBack, P1ComboCounter, numLinesRemoved
+    return lineSent, P1backToBack, P1ComboCounter, numLinesRemoved, P1PerfectClear, P1backToBackPrint, P1Tetris, P1Combo, P1TMini, P1TSingle, P1TDouble, P1TTriple
 
 
-def sendLineFromP2(board, numLinesRemoved, P2Tspin, P2backToBack, P2ComboCounter):
+def sendLineFromP2(board, numLinesRemoved, P2Tspin, P2backToBack, P2ComboCounter, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple):
     blankBoard = getBlankBoard()
     lineSent = 0
 
@@ -1119,31 +1684,36 @@ def sendLineFromP2(board, numLinesRemoved, P2Tspin, P2backToBack, P2ComboCounter
             P2backToBack = False
             lineSent += ATTACKTABLE[3]
         elif numLinesRemoved == 4:
-            print('tetris')
+            P2Tetris = True
             if P2backToBack:
-                print('B2B')
+                P2backToBackPrint = True
                 lineSent += ATTACKTABLE[10]
             lineSent += ATTACKTABLE[4]
             P2backToBack = True
     else:
-        print('T-spin')
         if P2backToBack:
-            print('B2B')
+            P2backToBackPrint = True
             lineSent += ATTACKTABLE[10]
         P2backToBack = True
         if numLinesRemoved == 0:
+            P2TMini = True
             lineSent += ATTACKTABLE[8]
         elif numLinesRemoved == 1:
+            P2TSingle = True
             lineSent += ATTACKTABLE[7]
         elif numLinesRemoved == 2:
+            P2TDouble = True
             lineSent += ATTACKTABLE[5]
         elif numLinesRemoved == 3:
+            P2TTriple = True
             lineSent += ATTACKTABLE[6]
 
     if blankBoard == board:
+        P2PerfectClear = True
         lineSent += ATTACKTABLE[9]
 
     if numLinesRemoved > 0:
+        P2Combo = True
         P2ComboCounter += 1
         if P2ComboCounter <= 12:
             lineSent += COMBOTABLE[P2ComboCounter - 1]
@@ -1152,7 +1722,7 @@ def sendLineFromP2(board, numLinesRemoved, P2Tspin, P2backToBack, P2ComboCounter
     else:
         P2ComboCounter = 0
 
-    return lineSent, P2backToBack, P2ComboCounter, numLinesRemoved
+    return lineSent, P2backToBack, P2ComboCounter, numLinesRemoved, P2PerfectClear, P2backToBackPrint, P2Tetris, P2Combo, P2TMini, P2TSingle, P2TDouble, P2TTriple
 
 
 def convertToPixelCoordsP1(boxx, boxy):
@@ -1170,6 +1740,8 @@ def drawBoxP1(boxx, boxy, color, pixelx=None, pixely=None):
         return
     if loseP1:
         color = 14
+    if P1Frozen:
+        color = 16
     if pixelx == None and pixely == None:
         pixelx, pixely = convertToPixelCoordsP1(boxx, boxy)
     pygame.draw.rect(DISPLAYSURF, COLORS[color], (pixelx, pixely, BOXSIZE, BOXSIZE))
@@ -1190,6 +1762,8 @@ def drawBoxP2(boxx, boxy, color, pixelx=None, pixely=None):
         return
     if loseP2:
         color = 14
+    if P2Frozen:
+        color = 16
     if pixelx == None and pixely == None:
         pixelx, pixely = convertToPixelCoordsP2(boxx, boxy)
     pygame.draw.rect(DISPLAYSURF, COLORS[color], (pixelx, pixely, BOXSIZE, BOXSIZE))    
@@ -1336,26 +1910,61 @@ def drawHoldPieceP2(piece):
         drawPieceP2(piece, pixelx=WINDOWWIDTH-540, pixely=120)
 
 
-def drawText(text, x, y):
-    infoSurf = BASICFONT.render(text, True, WHITE)
+def drawText(text, x, y, color):
+    infoSurf = BASICFONT.render(text, True, color)
     infoRect = infoSurf.get_rect()
     infoRect.topleft = (x, y)
     DISPLAYSURF.blit(infoSurf, infoRect)
 
-def drawInstructions(x, y):
-    drawText('tab: Quit', x, y)
-    drawText('r: Reset', x, y + 20)
-    drawText('p: Pause', x, y + 40)
-    drawText('f: Fullscreen', x, y + 60)
-    drawText('g: Small screen', x, y + 80)
-    drawText('P1-e | P2-3: Hold', x, y + 100)
-    drawText('P1-space | P2-v: Hard drop', x, y + 120)
-    drawText('P1-left | P2-j: Move left', x, y + 140)
-    drawText('P1-right | P2-l: Move right', x, y + 160)
-    drawText('P1-down | P2-k: Soft drop', x, y + 180)
-    drawText('P1-up | P2-i: Clockwise', x, y + 200)
-    drawText('P1-w | P2-2: Counter clockwise', x, y + 220)
-    drawText('P1-q | P2-1: Rotate 180', x, y + 240)
+
+def drawInstructions(x, y, color):
+    drawText('tab: Quit', x, y, color)
+    drawText('r: Reset', x, y + 20, color)
+    drawText('p: Pause', x, y + 40, color)
+    drawText('f: Fullscreen', x, y + 60, color)
+    drawText('g: Small screen', x, y + 80, color)
+    drawText('P1-e | P2-3: Hold', x, y + 100, color)
+    drawText('P1-space | P2-v: Hard drop', x, y + 120, color)
+    drawText('P1-left | P2-j: Move left', x, y + 140, color)
+    drawText('P1-right | P2-l: Move right', x, y + 160, color)
+    drawText('P1-down | P2-k: Soft drop', x, y + 180, color)
+    drawText('P1-up | P2-i: Clockwise', x, y + 200, color)
+    drawText('P1-w | P2-2: Counter clockwise', x, y + 220, color)
+    drawText('P1-q | P2-1: Rotate 180', x, y + 240, color)
+
+
+def drawSpecialMove(x, y, ComboCounter, Tspin, backToBack, board, tetris, PC, combo, mini, single, double, triple):
+    if ComboCounter != 0:
+        ComboCounter -= 1
+     
+    if PC:
+        drawText('Perfect Clear', x, y, WHITE)
+    if combo:
+        drawText(str(ComboCounter) + ' Combo', x, y + 40, WHITE)
+    if mini:
+        drawText('T-Spin Mini', x, y + 80, WHITE)
+    if single:
+        drawText('T-Spin Single', x, y + 80, WHITE)
+    if double:
+        drawText('T-Spin Dounble', x, y + 80, WHITE)
+    if triple:
+        drawText('T-Spin Triple', x, y + 80, WHITE)
+    if backToBack:
+        drawText('BackToBack', x, y + 120, WHITE)
+    if tetris:
+        drawText('Tetris', x, y + 160, WHITE)
+
+
+def fade(width, height, x, y): 
+    fade = pygame.Surface((width, height))
+    fade.fill((WHITE))
+    for alpha in range(0, 300):
+        fade.set_alpha(alpha)
+        DISPLAYSURF.blit(fade, (x,y))
+        pygame.display.update()
+        pygame.time.delay(5)
+
+
 
 if __name__ == '__main__':
     main()
